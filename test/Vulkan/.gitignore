@@ -1,0 +1,8 @@
+# Archivos residuales de compilación de VS2022
+tmp/
+
+# Archivos de compilación del proyecto
+bin/
+
+# Inclusión de la biblioteca compilada de Vulkan
+!lib/vulkan-1.lib
