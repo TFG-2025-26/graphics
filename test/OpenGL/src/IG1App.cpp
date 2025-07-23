@@ -74,7 +74,7 @@ IG1App::iniWinOpenGL()
 	// glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // enable on macOS
 
 	// Create window with its associated OpenGL context, return window's pointer
-	mWindow = glfwCreateWindow(mWinW, mWinH, "IG1App", nullptr, nullptr);
+	mWindow = glfwCreateWindow(mWinW, mWinH, "OpenGL", nullptr, nullptr);
 
 	if (mWindow == nullptr) {
 		glfwTerminate();

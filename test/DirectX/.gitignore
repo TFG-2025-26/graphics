@@ -1,5 +1,2 @@
 # Archivos residuales de compilación de VS2022
 tmp/
-
-# Archivos de compilación del proyecto
-bin/
