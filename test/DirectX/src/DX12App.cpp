@@ -13,14 +13,14 @@ struct Vertex {
 // Triángulo y ejes
 static const Vertex vertices[] = {
 	// Triángulo (cian)
-	{{ 0.0f,  0.5f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
-	{{ 0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
-	{{-0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
+	{{ 0.0f,  300.0f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
+	{{ 260.0f, -150.0f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
+	{{ -260.0f, -150.0f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
 
 	// Ejes
-	{{0, 0, 0}, {1, 0, 0, 1}}, {{1, 0, 0}, {1, 0, 0, 1}}, // X
-	{{0, 0, 0}, {0, 1, 0, 1}}, {{0, 1, 0}, {0, 1, 0, 1}}, // Y
-	{{0, 0, 0}, {0, 0, 1, 1}}, {{0, 0, 1}, {0, 0, 1, 1}}, // Z
+	{{0, 0, 0}, {1, 0, 0, 1}}, {{400, 0, 0}, {1, 0, 0, 1}}, // X
+	{{0, 0, 0}, {0, 1, 0, 1}}, {{0, 400, 0}, {0, 1, 0, 1}}, // Y
+	{{0, 0, 0}, {0, 0, 1, 1}}, {{0, 0, 400}, {0, 0, 1, 1}}, // Z
 };
 
 
@@ -158,8 +158,13 @@ void DX12App::init(HWND hwnd, int width, int height)
 	CD3DX12_RANGE cbReadRange(0, 0);
 	m_constantBuffer->Map(0, &cbReadRange, reinterpret_cast<void**>(&m_pCbvDataBegin));
 
-	DirectX::XMMATRIX identity = DirectX::XMMatrixIdentity();
-	memcpy(m_pCbvDataBegin, &identity, sizeof(identity));
+	float aspect = static_cast<float>(m_width) / m_height;
+	float halfHeight = 300.0f;
+	float halfWidth = aspect * halfHeight;
+
+	DirectX::XMMATRIX ortho = DirectX::XMMatrixOrthographicOffCenterLH(
+		-halfWidth, halfWidth, -halfHeight, halfHeight, 0.0f, 1.0f);
+	memcpy(m_pCbvDataBegin, &ortho, sizeof(ortho));
 
 	// Root signature
 	CD3DX12_ROOT_PARAMETER rootParam;
@@ -211,7 +216,7 @@ void DX12App::init(HWND hwnd, int width, int height)
 	psoDesc.DepthStencilState.DepthEnable = FALSE;
 	psoDesc.DepthStencilState.StencilEnable = FALSE;
 	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;

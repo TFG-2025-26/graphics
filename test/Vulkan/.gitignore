@@ -1,8 +1,9 @@
 # Archivos residuales de compilación de VS2022
 tmp/
 
-# Archivos de compilación del proyecto
-bin/
+# Ignorar TODO lo que haya en bin/, menos assets
+[Bb]in/*
 
-# Inclusión de la biblioteca compilada de Vulkan
-!lib/vulkan-1.lib
+# No ignorar la carpeta assets ni su contenido
+![Bb]in/[Aa]ssets/
+![Bb]in/[Aa]ssets/**
