@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Archivos de origen">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Archivos de encabezado">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Archivos de recursos\rhi">
+      <UniqueIdentifier>{2fe16b18-1c1b-4eba-be23-94f2cb07a622}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\common">
+      <UniqueIdentifier>{62033482-0a17-470d-b900-54bf6f2a3008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\dx12">
+      <UniqueIdentifier>{062034ac-988c-4a61-a02e-bffa983db9bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de origen\vulkan">
+      <UniqueIdentifier>{566125e0-e309-406b-9540-7e86f2e9e82e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\common">
+      <UniqueIdentifier>{5083ce75-a55e-4928-9774-fbaea0d4ba37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\dx12">
+      <UniqueIdentifier>{5d1eead3-0288-458f-a6f8-081af8450d71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Archivos de encabezado\vulkan">
+      <UniqueIdentifier>{098f2ebf-2ed5-4350-ad41-1299519e006d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\rhi\IGraphicsBackend.h">
+      <Filter>Archivos de recursos\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rhi\GraphicsConfig.h">
+      <Filter>Archivos de recursos\rhi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\GraphicsBackendFactory.h">
+      <Filter>Archivos de encabezado\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dx12\DX12Backend.h">
+      <Filter>Archivos de encabezado\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vulkan\VulkanBackend.h">
+      <Filter>Archivos de encabezado\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\TestSceneGeometry.h">
+      <Filter>Archivos de encabezado\common</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\common\GraphicsBackendFactory.cpp">
+      <Filter>Archivos de origen\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\common\WinMain.cpp">
+      <Filter>Archivos de origen\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dx12\DX12Backend.cpp">
+      <Filter>Archivos de origen\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vulkan\VulkanBackend.cpp">
+      <Filter>Archivos de origen\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\common\TestSceneGeometry.cpp">
+      <Filter>Archivos de origen\common</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+# Archivos residuales de compilación de VS2022
+tmp/
+
+# Ignorar TODO lo que haya en bin/, menos assets
+[Bb]in/*
+
+# No ignorar la carpeta assets ni su contenido
+![Bb]in/[Aa]ssets/
+![Bb]in/[Aa]ssets/**
