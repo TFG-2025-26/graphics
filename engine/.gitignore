@@ -1,0 +1,64 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+*.pdb
+*.idb
+
+# Visual Studio 2015/2017/2022 cache/options directory
+.vs/
+
+# Folders
+[Bb]in/*
+![Bb]in/[Aa]ssets/
+[Dd]ependencies/[Oo]gre/build/
+[Dd]ependencies/[Bb]ullet/build/
+[Dd]ependencies/[Ss][Dd][Ll]/build/
+[Dd]ependencies/[Ll]ua/build/
+[Tt]mp/
+
+![Dd]ependencies/Fmod/core/lib/x64/*.dll
+![Dd]ependencies/Fmod/core/lib/x64/*.lib
+
+![Dd]ependencies/Fmod/studio/lib/x64/*.dll
+![Dd]ependencies/Fmod/studio/lib/x64/*.lib
+
+![Bb]in/*fmod.dll
+![Bb]in/*fmodL.dll
+![Bb]in/*fmodstudio.dll
+![Bb]in/*fmodstudioL.dll
+
+# Ignorar archivos de la interfaz visual de Lua
+dependencies/LUA/src/lua/lua.c
+
+
+

@@ -1,0 +1,19 @@
+material MissingTexture
+{
+    technique
+    {
+        pass
+        {
+            lighting off
+
+            texture_unit
+            {
+                texture MissingTexture.png
+
+                address_mode wrap
+
+                scale 0.2 0.2  // repite 4 veces en u y v
+            }
+        }
+    }
+}
