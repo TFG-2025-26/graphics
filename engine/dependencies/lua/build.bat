@@ -23,7 +23,7 @@ pushd "%BUILDDIR%"
 :: -------------------------------------------
 :: Invocar cmake para generar la solución
 :: -------------------------------------------
-cmake -A %PLATFORM% "%COMPILEDIR%"
+cmake -A %PLATFORM% "%COMPILEDIR%."
 
 :: =========================================
 :: Compilación con MSBuild

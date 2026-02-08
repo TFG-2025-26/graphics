@@ -1,0 +1,15 @@
+[submodule "engine/dependencies/Ogre/src/ogre"]
+	path = engine/dependencies/Ogre/src/ogre
+	url = https://github.com/OGRECave/ogre
+[submodule "engine/dependencies/Bullet/src/bullet3"]
+	path = engine/dependencies/Bullet/src/bullet3
+	url = https://github.com/bulletphysics/bullet3
+[submodule "engine/dependencies/SDL/src/SDL"]
+	path = engine/dependencies/SDL/src/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "engine/dependencies/lua/src/lua"]
+	path = engine/dependencies/lua/src/lua
+	url = https://github.com/lua/lua
+[submodule "engine/dependencies/LuaBridge/src/LuaBridge"]
+	path = engine/dependencies/LuaBridge/src/LuaBridge
+	url = https://github.com/vinniefalco/LuaBridge
