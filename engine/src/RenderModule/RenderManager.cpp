@@ -18,6 +18,7 @@
 #include <SDL_video.h>
 #include <SDL_syswm.h>
 
+#include "Backends/OgreBackend.h"
 #include "RenderSceneManager.h"
 #include "RenderScene.h"
 #include "FluxError.h"
@@ -35,7 +36,7 @@ static DebugDrawer* _debugDrawer = nullptr;
 flux_render::RenderManager::RenderManager(const std::string& appName)
 {
 	_appName = appName;
-	_FSLayer = new Ogre::FileSystemLayer(_appName);
+	// _FSLayer = new Ogre::FileSystemLayer(_appName);
 	_root = nullptr;
 	_firstRun = true;
 
@@ -78,6 +79,40 @@ void flux_render::RenderManager::updateAspectRatio()
 	cam->setAspectRatio(aspectRatio);
 }
 
+bool flux_render::RenderManager::createNativeWindow()
+{
+	if (_nativeWindow != nullptr) return true;
+
+	_nativeWindow = SDL_CreateWindow(
+		_appName.c_str(),
+		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED,
+		static_cast<int>(_currW),
+		static_cast<int>(_currH),
+		SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+	);
+
+	if (_nativeWindow == nullptr) {
+		return false;
+	}
+
+	return true;
+}
+
+bool flux_render::RenderManager::createBackend()
+{
+	switch (_selectedAPI) {
+		case BackendAPI::Ogre:
+			_backend = std::make_unique<OgreBackend>(_appName);
+			return true;
+		case BackendAPI::D3D12:
+			// TO-DO
+			return false;
+		default:
+			return false;
+	}
+}
+
 void flux_render::RenderManager::enablePhysicsDebugDraw(btDiscreteDynamicsWorld* world, bool enable) {
 	if (enable && world) {
 		if (!_debugDrawer) {
@@ -112,11 +147,46 @@ Ogre::Root* flux_render::RenderManager::getRoot() const
 
 bool flux_render::RenderManager::init()
 {
-	if (!createRoot()) {
-		throwFluxError(false, "Error al crear la raíz en el módulo render");
+	if (!createNativeWindow()) {
+		return false;
 	}
 
-	setup();
+	if (!createBackend()) {
+		SDL_DestroyWindow(_nativeWindow);
+		_nativeWindow = nullptr;
+		return false;
+	}
+
+	RenderBackendDesc desc;
+	desc.nativeWindow = _nativeWindow;
+	desc.appName = _appName;
+	desc.width = _currW;
+	desc.height = _currH;
+	desc.vsync = _vsync;
+
+	if (!_backend->init(desc)) {
+		_backend.reset();
+		SDL_DestroyWindow(_nativeWindow);
+		_nativeWindow = nullptr;
+		return false;
+	}
+
+	// ----- PUENTE TEMPORAL A OGRE -----
+	if (_selectedAPI == BackendAPI::Ogre) {
+		OgreBackend* ogreBackend = getOgreBackend();
+		if (ogreBackend == nullptr) {
+			_backend->shutdown();
+			_backend.reset();
+			SDL_DestroyWindow(_nativeWindow);
+			_nativeWindow = nullptr;
+			return false;
+		}
+
+		// Estos ya NO son owners: solo aliases temporales
+		_root = ogreBackend->getRoot();
+		_window.native = _nativeWindow;
+		_window.render = ogreBackend->getRenderWindow();
+	}
 
 	_sceneMngr = new RenderSceneManager(_root);
 
@@ -128,7 +198,7 @@ bool flux_render::RenderManager::init()
 
 	RenderScene* scene = _sceneMngr->createScene("SampleScene");
 	if (!_sceneMngr->setCurrentScene("SampleScene")) {
-		throwFluxError(false, "Error al setear una escena");
+		throwFluxError(false, "Error al establecer una escena");
 	}
 
 	//_shaderGenerator->addSceneManager(_sceneMngr->getOgreSceneManager());
@@ -136,7 +206,12 @@ bool flux_render::RenderManager::init()
 
 	//_sceneMngr = _root->createSceneManager();
 	//_sceneMngr->getOgreSceneManager()->setAmbientLight(Ogre::ColourValue(0.2, 0.2, 0.2));
-	_shaderGenerator->addSceneManager(_sceneMngr->getOgreSceneManager());
+	OgreBackend* ogreBackend = getOgreBackend();
+	if (ogreBackend != nullptr) {
+		ogreBackend->addSceneManagerToRTShaderSystem(
+			_sceneMngr->getOgreSceneManager()
+		);
+	}
 
 	isInitialized = true;
 	return true;
@@ -154,192 +229,37 @@ void flux_render::RenderManager::update(float dt)
 
 bool flux_render::RenderManager::shutdown()
 {
-	if (isInitialized) {
-		_uiManager->shutdown();
-		delete _uiManager;
-		closeAll();
-
-		if (_debugDrawer != nullptr) {
-			delete _debugDrawer;
-			_debugDrawer = nullptr;
-		}
-
+	// 1) Destruye primero los sistemas del motor que usan Ogre
+	if (_sceneMngr != nullptr) {
 		delete _sceneMngr;
 		_sceneMngr = nullptr;
-
-		
-
-		if (_root != nullptr) {
-			_root->saveConfig();
-		}
-
-		delete _root;
-		_root = nullptr;
-
-	
-		isInitialized = false;
-		return true;
 	}
-	else return false;
-}
 
-bool flux_render::RenderManager::createRoot()
-{
-	std::string pluginsPath;
-	std::string nameFile = "plugins.cfg";
-	pluginsPath = _FSLayer->getConfigFilePath("plugins.cfg");
-
-	if (!Ogre::FileSystemLayer::fileExists(pluginsPath)) {
-		//OGRE_EXCEPT(Ogre::Exception::ERR_FILE_NOT_FOUND, "plugins.cfg", "RenderManager::createRoot");
-		throwFluxError(false, "El archivo plugins.cfg no ha sido encontrado");
+	if (_uiManager != nullptr) {
+		delete _uiManager;
+		_uiManager = nullptr;
 	}
-	_solutionPath = pluginsPath;
 
-	_solutionPath.resize(_solutionPath.size() - nameFile.size());
+	// 2) Apagar backend
+	if (_backend != nullptr) {
+		_backend->waitIdle();
+		_backend->shutdown();
+		_backend.reset();
+	}
 
+	// 3) Invalida aliases temporales a Ogre
+	_root = nullptr;
+	_window.render = nullptr;
 
-	_root = new Ogre::Root(pluginsPath, _FSLayer->getWritablePath("ogre.cfg"), _FSLayer->getWritablePath("ogre.log"));
+	// 4) Destruye ventana nativa
+	if (_nativeWindow != nullptr) {
+		SDL_DestroyWindow(_nativeWindow);
+		_nativeWindow = nullptr;
+	}
+
+	_window.native = nullptr;
 
 	return true;
-}
-
-void flux_render::RenderManager::closeAll()
-{
-	destroyRTShaderSystem();
-
-	if (_window.render != nullptr) {
-		_root->destroyRenderTarget(_window.render);
-		_window.render = nullptr;
-	}
-
-	if (_window.native != nullptr) {
-		SDL_DestroyWindow(_window.native);
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		_window.native = nullptr;
-	}
-}
-
-void flux_render::RenderManager::setup()
-{
-	_root->showConfigDialog(nullptr);
-	_root->initialise(false);
-	createWindow(_appName);
-	setWindowGrab(false);
-
-	// --- [1] Detectar resolución máxima real del sistema ---
-	_fullW = 0;
-	_fullH = 0;
-
-	int displayIndex = 0; // pantalla principal
-	int numModes = SDL_GetNumDisplayModes(displayIndex);
-
-	std::vector<std::pair<int, int>> validRes;
-
-	if (numModes > 0) {
-		std::cout << "----------------- CREACION DE RESOLUCIONES -----------------" << std::endl;
-		for (int i = 0; i < numModes; ++i) {
-			SDL_DisplayMode mode;
-			if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
-				// Guardar resolución máxima
-				if (mode.w * mode.h > _fullW * _fullH) {
-					_fullW = mode.w;
-					_fullH = mode.h;
-				}
-
-				std::pair<int, int> res = { mode.w, mode.h };
-
-				// evitar duplicados
-				if (std::find(validRes.begin(), validRes.end(), res) == validRes.end()) {
-					std::cout << res.first << "x" << res.second << std::endl;
-					validRes.push_back(res);
-				}
-			}
-		}
-
-		std::sort(validRes.begin(), validRes.end(), [](const auto& a, const auto& b) {
-			return a.first * a.second < b.first * b.second;
-			});
-	}
-
-	std::cout << "[Max Resolution Detected]: " << _fullW << "x" << _fullH << std::endl;
-
-	// --- [2] Establecer resoluciones válidas ---
-	setResolutions(validRes);
-
-	// --- [3] Cargar recursos y shaders ---
-	locateResources();
-	initialiseRTShaderSystem();
-	loadResources();
-}
-
-bool flux_render::RenderManager::oneTimeConfig()
-{
-	if (!_root->restoreConfig()) {
-		// return _root->showConfigDialog(OgreBites::getNativeConfigDialog());
-		return false;
-	}
-	else return true;
-}
-
-bool flux_render::RenderManager::initialiseRTShaderSystem()
-{
-	if (Ogre::RTShader::ShaderGenerator::initialize()) {
-		_shaderGenerator = Ogre::RTShader::ShaderGenerator::getSingletonPtr();
-
-		if (_RTShaderLibPath.empty())
-		{
-			//throwFluxError(false, "No se encontro RTShaderLibPath");
-			return false;
-		}
-	}
-
-	return true;
-}
-
-void flux_render::RenderManager::destroyRTShaderSystem()
-{
-	Ogre::MaterialManager::getSingleton().setActiveScheme(Ogre::MaterialManager::DEFAULT_SCHEME_NAME);
-
-	if (_shaderGenerator != nullptr) {
-		Ogre::RTShader::ShaderGenerator::destroy();
-		_shaderGenerator = nullptr;
-	}
-}
-
-NativeWindowPair flux_render::RenderManager::createWindow(const std::string& name)
-{
-	Ogre::NameValuePairList miscParams;
-
-	Ogre::ConfigOptionMap ropts = _root->getRenderSystem()->getConfigOptions();
-
-	std::istringstream mode(ropts["Video Mode"].currentValue);
-	std::string token;
-	mode >> _currW;
-	mode >> token;
-	mode >> _currH;
-
-	miscParams["FSAA"] = ropts["FSAA"].currentValue;
-	miscParams["vsync"] = ropts["VSync"].currentValue;
-	miscParams["gamma"] = ropts["sRGB Gamma Conversion"].currentValue;
-
-	if (!SDL_WasInit(SDL_INIT_VIDEO)) SDL_InitSubSystem(SDL_INIT_VIDEO);
-
-	Uint32 flags = 0;
-
-	if (ropts["Full Screen"].currentValue == "Yes") flags = SDL_WINDOW_FULLSCREEN;
-
-	_window.native = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, 
-		SDL_WINDOWPOS_UNDEFINED, _currW, _currH, flags);
-
-	SDL_SysWMinfo wmInfo;
-	SDL_VERSION(&wmInfo.version);
-	SDL_GetWindowWMInfo(_window.native, &wmInfo);
-
-	miscParams["externalWindowHandle"] = Ogre::StringConverter::toString(size_t(wmInfo.info.win.window));
-
-	_window.render = _root->createRenderWindow(name, _currW, _currH, false, &miscParams);
-
-	return _window;
 }
 
 void flux_render::RenderManager::setWindowName(const std::string& windowName)
@@ -400,13 +320,27 @@ void flux_render::RenderManager::fullScreen()
 	changeWindowSize(w, h);
 }
 
-void flux_render::RenderManager::changeWindowSize(int w, int h)
+void flux_render::RenderManager::changeWindowSize(uint32_t width, uint32_t height)
 {
-	SDL_SetWindowSize(_window.native, w, h);
-	SDL_SetWindowPosition(_window.native, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+	_currW = width;
+	_currH = height;
 
-	_window.render->windowMovedOrResized();
-	updateAspectRatio();
+	if (_nativeWindow != nullptr) {
+		SDL_SetWindowSize(_nativeWindow, static_cast<int>(width), static_cast<int>(height));
+	}
+
+	if (_backend != nullptr) {
+		_backend->resize(width, height);
+	}
+}
+
+void flux_render::RenderManager::setSync(bool enabled)
+{
+	_vsync = enabled;
+
+	if (_backend != nullptr) {
+		_backend->setSync(enabled);
+	}
 }
 
 flux_render::RenderSceneManager* flux_render::RenderManager::getSceneManager() const
@@ -419,40 +353,20 @@ flux_render::UIManager* flux_render::RenderManager::getUIManager() const
 	return _uiManager;
 }
 
-void flux_render::RenderManager::setWindowGrab(bool _grab)
+IRenderBackend* flux_render::RenderManager::getBackend() const
 {
-	SDL_bool grab = SDL_bool(_grab);
-	SDL_SetWindowGrab(_window.native, grab);
-	// SDL_SetRelativeMouseMode(grab);
-	SDL_ShowCursor(grab);
+	return _backend.get();
 }
 
-void flux_render::RenderManager::loadResources()
+OgreBackend* flux_render::RenderManager::getOgreBackend() const
 {
-	Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+	if (_backend == nullptr) return nullptr;
+	if (_backend->getAPI() != BackendAPI::Ogre) return nullptr;
+
+	return static_cast<OgreBackend*>(_backend.get());
 }
 
-void flux_render::RenderManager::locateResources()
+SDL_Window* flux_render::RenderManager::getNativeWindow() const
 {
-	std::string assetsPath = Ogre::FileSystemLayer::resolveBundlePath(_solutionPath + "assets\\");
-
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-		assetsPath + "animations",
-		"FileSystem", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-		assetsPath + "fonts",
-		"FileSystem", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-		assetsPath + "materials",
-		"FileSystem", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-		assetsPath + "meshes",
-		"FileSystem", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-
-	Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-		assetsPath + "textures",
-		"FileSystem", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+	return _nativeWindow;
 }

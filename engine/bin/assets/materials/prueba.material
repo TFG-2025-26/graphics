@@ -1,0 +1,43 @@
+material grass
+{
+    technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture  grass.PNG
+			}
+		}
+	}
+}
+
+material marmol
+{
+    technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				texture  marmol.jpg
+			}
+		}
+	}
+}
+
+material suelo
+{
+    technique
+	{
+	    pass
+		{
+	        texture_unit
+			{
+			    texture checker.png
+				scale 0.2 0.2
+	        }
+
+	    }
+    }
+}

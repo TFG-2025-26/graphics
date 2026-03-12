@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -85,6 +85,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\RenderModule\Backends\IRenderBackend.h" />
+    <ClInclude Include="..\..\src\RenderModule\Backends\OgreBackend.h" />
     <ClInclude Include="..\..\src\RenderModule\DebugDrawer.h" />
     <ClInclude Include="..\..\src\RenderModule\RenderLight.h" />
     <ClInclude Include="..\..\src\RenderModule\RenderManager.h" />
@@ -94,6 +96,7 @@
     <ClInclude Include="..\..\src\RenderModule\UIManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\RenderModule\Backends\OgreBackend.cpp" />
     <ClCompile Include="..\..\src\RenderModule\DebugDrawer.cpp" />
     <ClCompile Include="..\..\src\RenderModule\RenderLight.cpp" />
     <ClCompile Include="..\..\src\RenderModule\RenderManager.cpp" />

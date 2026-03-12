@@ -8,10 +8,14 @@
 #include "Singleton.h"
 
 // ----- STD -----
+#include <memory>
 #include <string>
 #include <vector>
-//--render----
 
+// --- FLUX_RENDER ---
+#include "Backends/IRenderBackend.h"
+
+// --- FLUX_PHYSICS ---
 #include "DebugDrawer.h"
 
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -53,6 +57,8 @@ struct NativeWindowPair
 	NativeWindowType* native = nullptr;
 };
 
+class OgreBackend;
+
 namespace flux_render {
 	class UIManager;
 	class RenderSceneManager;
@@ -90,71 +96,6 @@ namespace flux_render {
 		/// </summary>
 		bool shutdown() override;
 
-		// callback interface copied from various listeners to be used by ApplicationContext
-		virtual void windowMoved(Ogre::RenderWindow* rw) {}
-		virtual void windowResized(Ogre::RenderWindow* rw) {}
-		virtual bool windowClosing(Ogre::RenderWindow* rw) { return true; }
-		virtual void windowClosed(Ogre::RenderWindow* rw) {}
-		virtual void windowFocusChange(Ogre::RenderWindow* rw) {}
-
-		/// <summary>
-		/// Inicializa el sistema de shaders de trazado de rayos.
-		/// </summary>
-		/// <returns></returns>
-		bool initialiseRTShaderSystem();
-
-		/// <summary>
-		/// Destryoe el sistema de shaders de trazado de rayos.
-		/// </summary>
-		void destroyRTShaderSystem();
-
-		/// <summary>
-		/// Establece el contexto después de la configuración
-		/// </summary>
-		virtual void setup();
-
-		/// <summary>
-		/// Crea la raíz de OGRE
-		/// </summary>
-		virtual bool createRoot();
-
-		/// <summary>
-		/// Configura las opciones de inicio para OGRE.
-		/// </summary>
-		/// <returns></returns>
-		virtual bool oneTimeConfig();
-
-		/// <summary>
-		/// Cuando se captura una entrada, el ratón queda confinado en la ventana.	
-		/// </summary>
-		/// <param name="grab"></param>
-		void setWindowGrab(bool grab);
-
-		/// <summary>
-		/// Encuentro todo el grupo de recursos del contexto. Se carga a través del 
-		/// archivo de configuración.
-		/// </summary>
-		virtual void locateResources();
-
-		/// <summary>
-		/// Carga todo el grupo de recursos del contexto.
-		/// </summary>
-		virtual void loadResources();
-
-		/// <summary>
-		/// Hace la limpieza y apaga el contexto
-		/// </summary>
-		virtual void closeAll();
-
-		/// <summary>
-		/// Crea la ventana de renderizado. Debes usar SDL y no crear una ventana aparte ya que SDL no tendría
-		/// acceso a los eventos de otra manera. Por defecto los valores de ogre.cfg son usados para el alto, ancho
-		/// y parámetros misceláneos.
-		/// </summary>
-		/// <param name="name">Nombre de la ventana</param>
-		/// <returns></returns>
-		virtual NativeWindowPair createWindow(const std::string& name);
-
 		FLUX_API void setWindowName(const std::string& windowName);
 		// FLUX_API void setWindowIcon(std::string& windowIcon);
 
@@ -165,16 +106,30 @@ namespace flux_render {
 		FLUX_API void nextResolution();
 		FLUX_API void previousResolution();
 
-		void changeWindowSize(int w, int h);
+		void changeWindowSize(uint32_t width, uint32_t height);
+		void setSync(bool enabled);
 
 		RenderSceneManager* getSceneManager() const;
 
 		FLUX_API void enablePhysicsDebugDraw(btDiscreteDynamicsWorld* world, bool enable);
 		FLUX_API UIManager* getUIManager() const;
+
+		IRenderBackend* getBackend() const;
+		OgreBackend* getOgreBackend() const;
+		SDL_Window* getNativeWindow() const;
 	private:
 		RenderManager(const std::string& appName = "FLUX_ENGINE");
 
 		void updateAspectRatio();
+
+		bool createNativeWindow();
+		bool createBackend();
+
+		SDL_Window* _nativeWindow = nullptr;
+		std::unique_ptr<IRenderBackend> _backend = nullptr;
+		BackendAPI _selectedAPI = BackendAPI::Ogre;
+
+		bool _vsync = true;
 	protected:
 		Ogre::Root* _root;        // raíz de OGRE
 		NativeWindowPair _window; // ventana principal
@@ -194,7 +149,7 @@ namespace flux_render {
 		int _currRes = 0;
 		bool _isFullScreen = false;
 		uint32_t _fullW = 0, _fullH = 0;
-		uint32_t _currW = 0, _currH = 0;
+		uint32_t _currW = 800, _currH = 600;
 
 		UIManager* _uiManager;
 	};
