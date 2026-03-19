@@ -19,6 +19,7 @@
 #include <SDL_syswm.h>
 
 #include "Backends/OgreBackend.h"
+#include "Backends/OgreSceneBackend.h"
 #include "Backends/D3D12Backend.h"
 #include "RenderSceneManager.h"
 #include "RenderScene.h"
@@ -172,34 +173,18 @@ bool flux_render::RenderManager::init()
 	// ----- PUENTE TEMPORAL A OGRE -----
 	if (_selectedAPI == BackendAPI::Ogre) {
 		OgreBackend* ogreBackend = getOgreBackend();
-		if (ogreBackend == nullptr) {
-			_backend->shutdown();
-			_backend.reset();
-			SDL_DestroyWindow(_nativeWindow);
-			_nativeWindow = nullptr;
-			return false;
-		}
-
-		// Estos ya NO son owners: solo aliases temporales
-		_root = ogreBackend->getRoot();
-		_window.native = _nativeWindow;
-		_window.render = ogreBackend->getRenderWindow();
-
-		_sceneMngr = new RenderSceneManager(_root);
+		if (ogreBackend == nullptr) return false;
 
 		_uiManager = new UIManager();
 		_uiManager->init();
-		_uiManager->setSceneManager(_sceneMngr->getOgreSceneManager());
-		_sceneMngr->setUIManager(_uiManager);
 
-		RenderScene* scene = _sceneMngr->createScene("SampleScene");
-		if (!_sceneMngr->setCurrentScene("SampleScene")) {
-			throwFluxError(false, "Error al establecer una escena");
+		_sceneBackend = std::make_unique<OgreSceneBackend>(ogreBackend, _uiManager);
+		if (!_sceneBackend->init()) {
+			return false;
 		}
 
-		ogreBackend->addSceneManagerToRTShaderSystem(
-			_sceneMngr->getOgreSceneManager()
-		);
+		_sceneBackend->createScene("SampleScene");
+		_sceneBackend->setCurrentScene("SampleScene");
 	}
 
 	isInitialized = true;
@@ -350,6 +335,11 @@ void flux_render::RenderManager::setSync(bool enabled)
 flux_render::RenderSceneManager* flux_render::RenderManager::getSceneManager() const
 {
 	return _sceneMngr;
+}
+
+flux_render::IRenderSceneBackend* flux_render::RenderManager::getSceneBackend() const
+{
+	return _sceneBackend.get();
 }
 
 flux_render::UIManager* flux_render::RenderManager::getUIManager() const

@@ -14,6 +14,7 @@
 
 // --- FLUX_RENDER ---
 #include "Backends/IRenderBackend.h"
+#include "Backends/IRenderSceneBackend.h"
 
 // --- FLUX_PHYSICS ---
 #include "DebugDrawer.h"
@@ -109,14 +110,15 @@ namespace flux_render {
 		void changeWindowSize(uint32_t width, uint32_t height);
 		void setSync(bool enabled);
 
-		RenderSceneManager* getSceneManager() const;
-
 		FLUX_API void enablePhysicsDebugDraw(btDiscreteDynamicsWorld* world, bool enable);
 		FLUX_API UIManager* getUIManager() const;
 
 		IRenderBackend* getBackend() const;
 		OgreBackend* getOgreBackend() const;
 		SDL_Window* getNativeWindow() const;
+
+		RenderSceneManager* getSceneManager() const;
+		IRenderSceneBackend* getSceneBackend() const;
 	private:
 		RenderManager(const std::string& appName = "FLUX_ENGINE");
 
@@ -127,7 +129,8 @@ namespace flux_render {
 
 		SDL_Window* _nativeWindow = nullptr;
 		std::unique_ptr<IRenderBackend> _backend = nullptr;
-		BackendAPI _selectedAPI = BackendAPI::D3D12;
+		std::unique_ptr<IRenderSceneBackend> _sceneBackend = nullptr;
+		BackendAPI _selectedAPI = BackendAPI::Ogre;
 
 		bool _vsync = true;
 	protected:
