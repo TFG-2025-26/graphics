@@ -25,6 +25,7 @@
     <ClCompile Include="..\..\src\RenderModule\Backends\OgreBackend.cpp">
       <Filter>Archivos de origen\Backends</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\RenderModule\Backends\D3D12Backend.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\RenderModule\DebugDrawer.h">
@@ -52,6 +53,9 @@
       <Filter>Archivos de encabezado\Backends</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\RenderModule\Backends\OgreBackend.h">
+      <Filter>Archivos de encabezado\Backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\RenderModule\Backends\D3D12Backend.h">
       <Filter>Archivos de encabezado\Backends</Filter>
     </ClInclude>
   </ItemGroup>

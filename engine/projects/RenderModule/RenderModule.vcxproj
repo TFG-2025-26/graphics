@@ -85,6 +85,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\RenderModule\Backends\D3D12Backend.h" />
     <ClInclude Include="..\..\src\RenderModule\Backends\IRenderBackend.h" />
     <ClInclude Include="..\..\src\RenderModule\Backends\OgreBackend.h" />
     <ClInclude Include="..\..\src\RenderModule\DebugDrawer.h" />
@@ -96,6 +97,7 @@
     <ClInclude Include="..\..\src\RenderModule\UIManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\RenderModule\Backends\D3D12Backend.cpp" />
     <ClCompile Include="..\..\src\RenderModule\Backends\OgreBackend.cpp" />
     <ClCompile Include="..\..\src\RenderModule\DebugDrawer.cpp" />
     <ClCompile Include="..\..\src\RenderModule\RenderLight.cpp" />

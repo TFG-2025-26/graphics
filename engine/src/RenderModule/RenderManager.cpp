@@ -19,6 +19,7 @@
 #include <SDL_syswm.h>
 
 #include "Backends/OgreBackend.h"
+#include "Backends/D3D12Backend.h"
 #include "RenderSceneManager.h"
 #include "RenderScene.h"
 #include "FluxError.h"
@@ -106,8 +107,8 @@ bool flux_render::RenderManager::createBackend()
 			_backend = std::make_unique<OgreBackend>(_appName);
 			return true;
 		case BackendAPI::D3D12:
-			// TO-DO
-			return false;
+			_backend = std::make_unique<D3D12Backend>(_appName);
+			return true;
 		default:
 			return false;
 	}
@@ -132,7 +133,7 @@ void flux_render::RenderManager::enablePhysicsDebugDraw(btDiscreteDynamicsWorld*
 
 flux_render::RenderManager::~RenderManager()
 {
-	delete _FSLayer;
+
 }
 
 Ogre::RenderWindow* flux_render::RenderManager::getRenderWindow() const
@@ -147,10 +148,7 @@ Ogre::Root* flux_render::RenderManager::getRoot() const
 
 bool flux_render::RenderManager::init()
 {
-	if (!createNativeWindow()) {
-		return false;
-	}
-
+	if (!createNativeWindow()) return false;
 	if (!createBackend()) {
 		SDL_DestroyWindow(_nativeWindow);
 		_nativeWindow = nullptr;
@@ -186,28 +184,19 @@ bool flux_render::RenderManager::init()
 		_root = ogreBackend->getRoot();
 		_window.native = _nativeWindow;
 		_window.render = ogreBackend->getRenderWindow();
-	}
 
-	_sceneMngr = new RenderSceneManager(_root);
+		_sceneMngr = new RenderSceneManager(_root);
 
-	_uiManager = new UIManager();
-	_uiManager->init();
-	_uiManager->setSceneManager(_sceneMngr->getOgreSceneManager());
-	_sceneMngr->setUIManager(_uiManager);
-	// _sceneMngr->addRenderQueueListener(_overlaySystem);
+		_uiManager = new UIManager();
+		_uiManager->init();
+		_uiManager->setSceneManager(_sceneMngr->getOgreSceneManager());
+		_sceneMngr->setUIManager(_uiManager);
 
-	RenderScene* scene = _sceneMngr->createScene("SampleScene");
-	if (!_sceneMngr->setCurrentScene("SampleScene")) {
-		throwFluxError(false, "Error al establecer una escena");
-	}
+		RenderScene* scene = _sceneMngr->createScene("SampleScene");
+		if (!_sceneMngr->setCurrentScene("SampleScene")) {
+			throwFluxError(false, "Error al establecer una escena");
+		}
 
-	//_shaderGenerator->addSceneManager(_sceneMngr->getOgreSceneManager());
-	//scene->createSceneObject("SampleObject");
-
-	//_sceneMngr = _root->createSceneManager();
-	//_sceneMngr->getOgreSceneManager()->setAmbientLight(Ogre::ColourValue(0.2, 0.2, 0.2));
-	OgreBackend* ogreBackend = getOgreBackend();
-	if (ogreBackend != nullptr) {
 		ogreBackend->addSceneManagerToRTShaderSystem(
 			_sceneMngr->getOgreSceneManager()
 		);
@@ -219,16 +208,28 @@ bool flux_render::RenderManager::init()
 
 void flux_render::RenderManager::update(float dt)
 {
-	_root->renderOneFrame();
-	_uiManager->update(dt);
-	_window.render->update();
+	if (_backend == nullptr) return;
+	if (!_backend->beginFrame()) return;
+
+	if (_uiManager != nullptr) {
+		_uiManager->update(dt);
+	}
+
 	if (_debugDrawer) {
 		_debugDrawer->clear();
 	}
+
+	_backend->endFrame();
 }
 
 bool flux_render::RenderManager::shutdown()
 {
+	// 0) Destruye el renderizado en modo debug
+	if (_debugDrawer != nullptr) {
+		delete _debugDrawer;
+		_debugDrawer = nullptr;
+	}
+
 	// 1) Destruye primero los sistemas del motor que usan Ogre
 	if (_sceneMngr != nullptr) {
 		delete _sceneMngr;
@@ -265,7 +266,9 @@ bool flux_render::RenderManager::shutdown()
 void flux_render::RenderManager::setWindowName(const std::string& windowName)
 {
 	_appName = windowName;
-	SDL_SetWindowTitle(_window.native, windowName.c_str());
+	if (_nativeWindow != nullptr) {
+		SDL_SetWindowTitle(_window.native, windowName.c_str());
+	}
 }
 
 void flux_render::RenderManager::setResolutions(const std::vector<std::pair<int, int>>& resolutions)
@@ -292,10 +295,11 @@ void flux_render::RenderManager::setResolutions(const std::vector<std::pair<int,
 void flux_render::RenderManager::changeResolution()
 {
 	if (!_isFullScreen && !_resolutions.empty()) {
-		changeWindowSize(_resolutions[_currRes].first, _resolutions[_currRes].second);
-		_currH = _resolutions[_currRes].first;
-		_currW = _resolutions[_currRes].second;
+		_currW = _resolutions[_currRes].first;
+		_currH = _resolutions[_currRes].second;
+		changeWindowSize(_currW, _currH);
 	}
+
 	std::cout << _currW << "x" << _currH << std::endl;
 }
 
