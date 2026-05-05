@@ -25,6 +25,8 @@ extern "C" {
 #include "RenderScene.h"
 #include "UIManager.h"
 
+#include "Backends/IRenderSceneBackend.h"
+
 flux_script::ScriptManager::ScriptManager()
 {
 	auto mngr = LuaManager::instance();
@@ -67,18 +69,25 @@ bool flux_script::ScriptManager::loadScene(const std::string& sceneName)
         return false;
     }
 
-    auto renderSceneMgr = flux_render::RenderManager::instance()->getSceneManager();
+    auto* renderManager = flux_render::RenderManager::instance();
+    auto* sceneBackend = renderManager->getSceneBackend();
 
-    // Ocultar todas las RenderScenes, mostrar solo la activa
-    for (const auto& [id, scene] : renderSceneMgr->getAllScenes()) {
-        scene->setOgreNodeVisible(id == sceneName);
+    if (sceneBackend == nullptr) {
+        throwFluxError(false, "No existe SceneBackend para activar la escena '" + sceneName + "'");
+        return false;
     }
 
-    renderSceneMgr->setCurrentScene(sceneName);
+    if (!sceneBackend->setCurrentScene(sceneName)) {
+        throwFluxError(false, "No se pudo activar la escena de render ' " + sceneName + "'");
+        return false;
+    }
 
-    flux_render::RenderManager::instance()->getUIManager()->setSceneActive(sceneName);
+    auto* uiManager = renderManager->getUIManager();
+    if (uiManager != nullptr) {
+        uiManager->setSceneActive(sceneName);
+    }
 
-    // Buscar c�maras pendientes y crearlas
+    // Buscar cmaras pendientes y crearlas
     auto entities = flux_utils::SceneManager::instance()->getEntities();
     for (auto& [name, ent] : entities) {
         if (ent->hasComponent(CAMERA)) {
@@ -228,7 +237,17 @@ bool flux_script::ScriptManager::parseScene(const std::string& sceneName,
     lua_State* L)
 {
     flux_utils::SceneManager::instance()->createScene(sceneName, false);
-    flux_render::RenderManager::instance()->getSceneManager()->createScene(sceneName);
+
+    auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
+    if (sceneBackend == nullptr) {
+        throwFluxError(false, "No existe SceneBackend para crear la escena '" + sceneName + "'");
+        return false;
+    }
+
+    if (!sceneBackend->createScene(sceneName)) {
+        throwFluxError(false, "No se pudo crear la escena de render '" + sceneName + "'");
+        return false;
+    }
 
     lua_getglobal(L, "Entities");
     if (!lua_istable(L, -1)) {

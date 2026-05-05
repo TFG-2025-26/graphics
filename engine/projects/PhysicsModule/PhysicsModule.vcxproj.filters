@@ -21,6 +21,9 @@
     <ClInclude Include="..\..\src\PhysicsModule\RigidBodyWrapper.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\RenderModule\Backends\IRenderSceneBackend.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\PhysicsModule\PhysicsManager.cpp">

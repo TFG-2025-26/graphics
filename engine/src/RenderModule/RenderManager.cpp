@@ -1,4 +1,4 @@
-﻿#include "RenderManager.h"
+#include "RenderManager.h"
 
 // ---------- OGRE ----------
 #include <OgreRoot.h>
@@ -21,6 +21,7 @@
 #include "Backends/OgreBackend.h"
 #include "Backends/OgreSceneBackend.h"
 #include "Backends/D3D12Backend.h"
+#include "Backends/D3D12SceneBackend.h"
 #include "RenderSceneManager.h"
 #include "RenderScene.h"
 #include "FluxError.h"
@@ -28,7 +29,9 @@
 //---------- debug-----------
 #include "DebugDrawer.h"
 #include <btBulletDynamicsCommon.h>
+#include <cmath>
 #include <iostream>
+#include <map>
 
 #include "UIManager.h"
 
@@ -115,20 +118,25 @@ bool flux_render::RenderManager::createBackend()
 	}
 }
 
-void flux_render::RenderManager::enablePhysicsDebugDraw(btDiscreteDynamicsWorld* world, bool enable) {
+void flux_render::RenderManager::enablePhysicsDebugDraw(btDiscreteDynamicsWorld* world, bool enable)
+{
+	if (_selectedAPI != BackendAPI::Ogre) return;
+
+	auto* sceneManager = getSceneManager();
+	if (!sceneManager) return;
+
 	if (enable && world) {
 		if (!_debugDrawer) {
-			_debugDrawer = new DebugDrawer(_sceneMngr->getOgreSceneManager());
+			_debugDrawer = new DebugDrawer(sceneManager->getOgreSceneManager());
 			_debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
-			world->setDebugDrawer(static_cast<btIDebugDraw*>(_debugDrawer->getBtIDebugDraw()));
-			std::cout<<"DebugDrawer creado/-------------------------------------------------------------------------------//"<<std::endl;
+			world->setDebugDrawer(
+				static_cast<btIDebugDraw*>(_debugDrawer->getBtIDebugDraw())
+			);
 		}
 	}
 	else {
-		if (_debugDrawer) {
-			delete _debugDrawer;
-			_debugDrawer = nullptr;
-		}
+		delete _debugDrawer;
+		_debugDrawer = nullptr;
 	}
 }
 
@@ -150,6 +158,7 @@ Ogre::Root* flux_render::RenderManager::getRoot() const
 bool flux_render::RenderManager::init()
 {
 	if (!createNativeWindow()) return false;
+
 	if (!createBackend()) {
 		SDL_DestroyWindow(_nativeWindow);
 		_nativeWindow = nullptr;
@@ -170,15 +179,29 @@ bool flux_render::RenderManager::init()
 		return false;
 	}
 
-	// ----- PUENTE TEMPORAL A OGRE -----
+	_window.native = _nativeWindow;
+
 	if (_selectedAPI == BackendAPI::Ogre) {
 		OgreBackend* ogreBackend = getOgreBackend();
 		if (ogreBackend == nullptr) return false;
+
+		_root = ogreBackend->getRoot();
+		_window.render = ogreBackend->getRenderWindow();
 
 		_uiManager = new UIManager();
 		_uiManager->init();
 
 		_sceneBackend = std::make_unique<OgreSceneBackend>(ogreBackend, _uiManager);
+	}
+	else if (_selectedAPI == BackendAPI::D3D12) {
+		auto* d3d12Backend = static_cast<D3D12Backend*>(_backend.get());
+		_sceneBackend = std::make_unique<flux_render::D3D12SceneBackend>(d3d12Backend);
+
+		_root = nullptr;
+		_window.render = nullptr;
+	}
+
+	if (_sceneBackend != nullptr) {
 		if (!_sceneBackend->init()) {
 			return false;
 		}
@@ -209,16 +232,14 @@ void flux_render::RenderManager::update(float dt)
 
 bool flux_render::RenderManager::shutdown()
 {
-	// 0) Destruye el renderizado en modo debug
 	if (_debugDrawer != nullptr) {
 		delete _debugDrawer;
 		_debugDrawer = nullptr;
 	}
 
-	// 1) Destruye primero los sistemas del motor que usan Ogre
-	if (_sceneMngr != nullptr) {
-		delete _sceneMngr;
-		_sceneMngr = nullptr;
+	if (_sceneBackend != nullptr) {
+		_sceneBackend->shutdown();
+		_sceneBackend.reset();
 	}
 
 	if (_uiManager != nullptr) {
@@ -226,18 +247,15 @@ bool flux_render::RenderManager::shutdown()
 		_uiManager = nullptr;
 	}
 
-	// 2) Apagar backend
 	if (_backend != nullptr) {
 		_backend->waitIdle();
 		_backend->shutdown();
 		_backend.reset();
 	}
 
-	// 3) Invalida aliases temporales a Ogre
 	_root = nullptr;
 	_window.render = nullptr;
 
-	// 4) Destruye ventana nativa
 	if (_nativeWindow != nullptr) {
 		SDL_DestroyWindow(_nativeWindow);
 		_nativeWindow = nullptr;
@@ -334,7 +352,13 @@ void flux_render::RenderManager::setSync(bool enabled)
 
 flux_render::RenderSceneManager* flux_render::RenderManager::getSceneManager() const
 {
-	return _sceneMngr;
+	if (_sceneBackend == nullptr) return nullptr;
+	if (_selectedAPI != BackendAPI::Ogre) return nullptr;
+
+	auto* ogreSceneBackend =
+		static_cast<flux_render::OgreSceneBackend*>(_sceneBackend.get());
+
+	return ogreSceneBackend->getSceneManager();
 }
 
 flux_render::IRenderSceneBackend* flux_render::RenderManager::getSceneBackend() const
@@ -345,6 +369,17 @@ flux_render::IRenderSceneBackend* flux_render::RenderManager::getSceneBackend() 
 flux_render::UIManager* flux_render::RenderManager::getUIManager() const
 {
 	return _uiManager;
+}
+
+void flux_render::RenderManager::setBackendAPI(BackendAPI api)
+{
+	if (isInitialized) return;
+	_selectedAPI = api;
+}
+
+BackendAPI flux_render::RenderManager::getBackendAPI() const
+{
+	return _selectedAPI;
 }
 
 IRenderBackend* flux_render::RenderManager::getBackend() const

@@ -12,9 +12,23 @@
 
 flux_ec::CUI::~CUI()
 {
+	flux_render::RenderManager* renderManager = flux_render::RenderManager::instance();
+
+	if (renderManager != nullptr) {
+		flux_render::UIManager* ui = renderManager->getUIManager();
+
+		if (ui != nullptr) {
+			// ui->unregisterComponent(this); // si tienes esta función
+		}
+	}
+
 	delete _pos;
 	delete _size;
 	delete _color;
+
+	_pos = nullptr;
+	_size = nullptr;
+	_color = nullptr;
 }
 
 bool flux_ec::CUI::init(flux_script::ComponentArguments* args)
@@ -33,14 +47,23 @@ bool flux_ec::CUI::init(flux_script::ComponentArguments* args)
 	_text = args->getValueToString("Text");
 	_charHeight = args->getValueToFloat("CharHeight");
 
+	flux_render::RenderManager* renderManager = flux_render::RenderManager::instance();
 
-	flux_render::UIManager* ui = flux_render::RenderManager::instance()->getUIManager();
+	if (renderManager == nullptr) {
+		return true;
+	}
+
+	flux_render::UIManager* ui = renderManager->getUIManager();
+
 	if (ui == nullptr) {
-		throwFluxError(false, "No se ha podido encontrar el UI Manager");
+		// En D3D12 todavía no hay backend de UI.
+		// No fallamos la carga de escena por esto.
+		return true;
 	}
 
 	if (!ui->registerComponent(this)) {
 		throwFluxError(false, "Error en el registro de una UI en el UI Manager");
+		return false;
 	}
 
 	return true;

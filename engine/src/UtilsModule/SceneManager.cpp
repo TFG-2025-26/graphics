@@ -191,7 +191,12 @@ void flux_utils::SceneManager::processPendingSceneChange() {
         flux_script::ScriptManager::instance()->readScene(_sceneToLoadPending);
         flux_script::ScriptManager::instance()->loadScene(_sceneToLoadPending);
         destroyScene(oldScene);
-        flux_render::RenderManager::instance()->getSceneManager()->destroyScene(oldScene);
+        
+        auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
+        if (sceneBackend != nullptr) {
+            sceneBackend->destroyScene(oldScene);
+        }
+
         _sceneToLoadPending = "";
     }
 }

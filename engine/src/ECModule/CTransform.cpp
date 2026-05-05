@@ -4,10 +4,12 @@
 #include "Entity.h"
 
 // -- FLUX_UTILS --
+#include "FluxError.h"
 #include "Vector3.h"
 #include "Vector4.h"
 
 // ----- FLUX_RENDER -----
+#include "Backends/IRenderSceneBackend.h"
 #include "RenderManager.h"
 #include "RenderSceneManager.h"
 #include "RenderScene.h"
@@ -21,15 +23,33 @@
 
 flux_ec::CTransform::~CTransform()
 {
-	delete _pos;
-	delete _rot;
-	delete _scale;
+	if (_owner != nullptr) {
+		const std::string entityName = _owner->getName();
+		const std::string sceneID = _owner->getSceneID();
 
-	if (!dynamic_cast<CMeshRenderer*>(_owner->getComponent(MESH)))
-	{
-		flux_render::RenderManager::instance()->getSceneManager()->
-			getCurrentScene()->deleteSceneObject(getOwner()->getName());
+		const bool hasMeshRenderer = _owner->hasComponent(MESH);
+
+		if (!hasMeshRenderer) {
+			auto* renderManager = flux_render::RenderManager::instance();
+
+			if (renderManager != nullptr) {
+				auto* sceneBackend = renderManager->getSceneBackend();
+
+				if (sceneBackend != nullptr) {
+					sceneBackend->destroySceneObject(sceneID, entityName);
+				}
+			}
+		}
 	}
+
+	delete _pos;
+	_pos = nullptr;
+
+	delete _rot;
+	_rot = nullptr;
+
+	delete _scale;
+	_scale = nullptr;
 }
 
 bool flux_ec::CTransform::init(flux_script::ComponentArguments* args)
@@ -46,14 +66,20 @@ bool flux_ec::CTransform::init(flux_script::ComponentArguments* args)
 	std::string sceneID = getOwner()->getSceneID();
 
 	flux_render::RenderManager* renderMngr = flux_render::RenderManager::instance();
-	flux_render::RenderScene* renderScene = renderMngr->getSceneManager()->getScene(sceneID);
 
-	renderScene->createSceneObject(entityName);
-	_renderObject = renderScene->getRenderObject(entityName);
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	_renderObject->setPosition(*_pos);
-	_renderObject->setOrientation(*_rot);
-	_renderObject->setScale(*_scale);
+	if (sceneBackend == nullptr) {
+		throwFluxError(false, "No existe SceneBackend para crear el objeto '" + entityName + "'");
+		return false;
+	}
+
+	if (!sceneBackend->createSceneObject(sceneID, entityName)) {
+		throwFluxError(false, "No se pudo crear el objeto de render '" + entityName + "'");
+		return false;
+	}
+
+	sceneBackend->setObjectTransform(sceneID, entityName, *_pos, *_rot, *_scale);
 
 	return true;
 }
@@ -80,23 +106,32 @@ flux_utils::Vector3 flux_ec::CTransform::getScale() const
 
 void flux_ec::CTransform::setPos(const flux_utils::Vector3& pos)
 {
-	*_pos = pos;
+	if (_pos == nullptr) {
+		return;
+	}
 
-	_renderObject->setPosition(pos);
+	*_pos = pos;
+	syncRenderTransform();
 }
 
 void flux_ec::CTransform::setRot(const flux_utils::Vector4& rot)
 {
-	*_rot = rot;
+	if (_rot == nullptr) {
+		return;
+	}
 
-	_renderObject->setOrientation(rot);
+	*_rot = rot;
+	syncRenderTransform();
 }
 
 void flux_ec::CTransform::setScale(const flux_utils::Vector3& scale)
 {
-	*_scale = scale;
+	if (_scale == nullptr) {
+		return;
+	}
 
-	_renderObject->setScale(scale);
+	*_scale = scale;
+	syncRenderTransform();
 }
 
 void flux_ec::CTransform::lookAt(const flux_utils::Vector3& pos)
@@ -104,4 +139,29 @@ void flux_ec::CTransform::lookAt(const flux_utils::Vector3& pos)
 	_renderObject->lookAt(pos);
 
 	*_rot = _renderObject->getOrientation();
+}
+
+void flux_ec::CTransform::syncRenderTransform()
+{
+	if (_owner == nullptr || _pos == nullptr || _rot == nullptr || _scale == nullptr) {
+		return;
+	}
+
+	auto* renderManager = flux_render::RenderManager::instance();
+	if (renderManager == nullptr) {
+		return;
+	}
+
+	auto* sceneBackend = renderManager->getSceneBackend();
+	if (sceneBackend == nullptr) {
+		return;
+	}
+
+	sceneBackend->setObjectTransform(
+		_owner->getSceneID(),
+		_owner->getName(),
+		*_pos,
+		*_rot,
+		*_scale
+	);
 }

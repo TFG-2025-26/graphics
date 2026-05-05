@@ -46,6 +46,8 @@ namespace flux_ec {
         flux_utils::Vector3* _scale = nullptr;
 
         flux_render::RenderObject* _renderObject = nullptr;
+
+        void syncRenderTransform();
     };
 }
 

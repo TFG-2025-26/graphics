@@ -30,13 +30,16 @@ bool flux_ec::CLight::init(flux_script::ComponentArguments* args)
 	std::string entityName = getOwner()->getName();
 	std::string sceneID = getOwner()->getSceneID();
 
-	flux_render::RenderManager* rMngr = flux_render::RenderManager::instance();
-	flux_render::RenderSceneManager* sceneMngr = rMngr->getSceneManager();
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	flux_render::RenderScene* currentScene = sceneMngr->getScene(sceneID);
+	if (sceneBackend == nullptr) {
+		throwFluxError(false, "No existe SceneBackend para Light");
+		return false;
+	}
 
-	if (!currentScene->createLight(entityName, *_diffuseColor, _lightType)) {
+	if (!sceneBackend->createLight(sceneID, entityName, *_diffuseColor, _lightType)) {
 		throwFluxError(false, "Fallo al inicializar el componente Light");
+		return false;
 	}
 
 	return true;

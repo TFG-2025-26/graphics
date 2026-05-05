@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -86,8 +86,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\RenderModule\Backends\D3D12Backend.h" />
+    <ClInclude Include="..\..\src\RenderModule\Backends\D3D12SceneBackend.h" />
     <ClInclude Include="..\..\src\RenderModule\Backends\IRenderBackend.h" />
+    <ClInclude Include="..\..\src\RenderModule\Backends\IRenderSceneBackend.h" />
     <ClInclude Include="..\..\src\RenderModule\Backends\OgreBackend.h" />
+    <ClInclude Include="..\..\src\RenderModule\Backends\OgreSceneBackend.h" />
     <ClInclude Include="..\..\src\RenderModule\DebugDrawer.h" />
     <ClInclude Include="..\..\src\RenderModule\RenderLight.h" />
     <ClInclude Include="..\..\src\RenderModule\RenderManager.h" />
@@ -95,12 +98,12 @@
     <ClInclude Include="..\..\src\RenderModule\RenderScene.h" />
     <ClInclude Include="..\..\src\RenderModule\RenderSceneManager.h" />
     <ClInclude Include="..\..\src\RenderModule\UIManager.h" />
-    <ClInclude Include="U:\hlocal\graphics\engine\src\RenderModule\Backends\IRenderSceneBackend.h" />
-    <ClInclude Include="U:\hlocal\graphics\engine\src\RenderModule\Backends\OgreSceneBackend.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\RenderModule\Backends\D3D12Backend.cpp" />
+    <ClCompile Include="..\..\src\RenderModule\Backends\D3D12SceneBackend.cpp" />
     <ClCompile Include="..\..\src\RenderModule\Backends\OgreBackend.cpp" />
+    <ClCompile Include="..\..\src\RenderModule\Backends\OgreSceneBackend.cpp" />
     <ClCompile Include="..\..\src\RenderModule\DebugDrawer.cpp" />
     <ClCompile Include="..\..\src\RenderModule\RenderLight.cpp" />
     <ClCompile Include="..\..\src\RenderModule\RenderManager.cpp" />
@@ -108,7 +111,6 @@
     <ClCompile Include="..\..\src\RenderModule\RenderScene.cpp" />
     <ClCompile Include="..\..\src\RenderModule\RenderSceneManager.cpp" />
     <ClCompile Include="..\..\src\RenderModule\UIManager.cpp" />
-    <ClCompile Include="U:\hlocal\graphics\engine\src\RenderModule\Backends\OgreSceneBackend.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -30,13 +30,16 @@ bool flux_ec::CMeshRenderer::init(flux_script::ComponentArguments* args)
 	std::string entityName = getOwner()->getName();
 	std::string sceneID = getOwner()->getSceneID();
 
-	flux_render::RenderManager* rMngr = flux_render::RenderManager::instance();
-	flux_render::RenderSceneManager* sceneMngr = rMngr->getSceneManager();
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	flux_render::RenderScene* currentScene = sceneMngr->getScene(sceneID);
+	if (sceneBackend == nullptr) {
+		throwFluxError(false, "No existe SceneBackend para MeshRenderer");
+		return false;
+	}
 
-	if (!currentScene->createMesh(entityName, _meshName, _materialName)) {
+	if (!sceneBackend->attachMesh(sceneID, entityName, _meshName, _materialName)) {
 		throwFluxError(false, "Fallo al inicializar el componente MeshRenderer");
+		return false;
 	}
 }
 

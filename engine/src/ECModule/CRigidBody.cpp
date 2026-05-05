@@ -223,13 +223,10 @@ void flux_ec::CRigidBody::fluxTransformToPhysicsTransform()
 
 void flux_ec::CRigidBody::physicsTransformToFluxTransform()
 {
-    //Se modifican las componentes del transform del motor conforme a los valores del rigidbody wrapper
+    if (_transform == nullptr || _rb == nullptr) {
+        return;
+    }
+
     _transform->setPos(_rb->getPosition());
     _transform->setRot(_rb->getRotation());
-
-    /*std::cout << "Nueva posición: "
-        << _rb->getPosition().getX() << ", "
-        << _rb->getPosition().getY() << ", "
-        << _rb->getPosition().getZ() << std::endl;*/
-
 }

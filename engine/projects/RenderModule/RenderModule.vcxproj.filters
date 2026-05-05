@@ -28,7 +28,10 @@
     <ClCompile Include="..\..\src\RenderModule\Backends\D3D12Backend.cpp">
       <Filter>Archivos de origen\Backends</Filter>
     </ClCompile>
-    <ClCompile Include="U:\hlocal\graphics\engine\src\RenderModule\Backends\OgreSceneBackend.cpp">
+    <ClCompile Include="..\..\src\RenderModule\Backends\D3D12SceneBackend.cpp">
+      <Filter>Archivos de origen\Backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\RenderModule\Backends\OgreSceneBackend.cpp">
       <Filter>Archivos de origen\Backends</Filter>
     </ClCompile>
   </ItemGroup>
@@ -63,10 +66,13 @@
     <ClInclude Include="..\..\src\RenderModule\Backends\D3D12Backend.h">
       <Filter>Archivos de encabezado\Backends</Filter>
     </ClInclude>
-    <ClInclude Include="U:\hlocal\graphics\engine\src\RenderModule\Backends\IRenderSceneBackend.h">
+    <ClInclude Include="..\..\src\RenderModule\Backends\D3D12SceneBackend.h">
       <Filter>Archivos de encabezado\Backends</Filter>
     </ClInclude>
-    <ClInclude Include="U:\hlocal\graphics\engine\src\RenderModule\Backends\OgreSceneBackend.h">
+    <ClInclude Include="..\..\src\RenderModule\Backends\OgreSceneBackend.h">
+      <Filter>Archivos de encabezado\Backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\RenderModule\Backends\IRenderSceneBackend.h">
       <Filter>Archivos de encabezado\Backends</Filter>
     </ClInclude>
   </ItemGroup>

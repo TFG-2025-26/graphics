@@ -45,62 +45,98 @@ void flux_ec::CAnimator::update(float dt) {
 	std::string entityName = getOwner()->getName();
 	std::string sceneID = getOwner()->getSceneID();
 
-	flux_render::RenderManager* rMngr = flux_render::RenderManager::instance();
-	flux_render::RenderSceneManager* sceneMngr = rMngr->getSceneManager();
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	flux_render::RenderScene* currentScene = sceneMngr->getScene(sceneID);
+	if (sceneBackend == nullptr) {
+		return;
+	}
 
-	currentScene->updateAnimations(entityName, dt);
+	for (const auto& animationName : _animations) {
+		sceneBackend->updateAnimation(sceneID, entityName, animationName, dt);
+	}
 }
 
-bool flux_ec::CAnimator::addAnimation(const std::string& animationName) {
+bool flux_ec::CAnimator::addAnimation(const std::string& animationName) 
+{
+	std::string entityName = getOwner()->getName();
+	std::string sceneID = getOwner()->getSceneID();
+
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
+
+	if (sceneBackend == nullptr) {
+		throwFluxError(false, "No existe SceneBackend para añadir a la animacion " + animationName);
+		return false;
+	}
+
+	if (!sceneBackend->addAnimation(sceneID, entityName, animationName)) {
+		throwFluxError(false, "No se pudo añadir la animación " + animationName +
+			" a la entidad " + entityName);
+		return false;
+	}
+
 	_animations.insert(animationName);
-	std::string entityName = getOwner()->getName();
-	std::string sceneID = getOwner()->getSceneID();
 
-	flux_render::RenderManager* rMngr = flux_render::RenderManager::instance();
-	flux_render::RenderSceneManager* sceneMngr = rMngr->getSceneManager();
-
-	flux_render::RenderScene* currentScene = sceneMngr->getScene(sceneID);
-
-	return currentScene->createAnimation(entityName, animationName);
+	return true;
 }
 
-void flux_ec::CAnimator::deleteAnimation(const std::string& animationName) {
-	_animations.erase(animationName);
+void flux_ec::CAnimator::deleteAnimation(const std::string& animationName) 
+{
 	std::string entityName = getOwner()->getName();
 	std::string sceneID = getOwner()->getSceneID();
 
-	flux_render::RenderManager* rMngr = flux_render::RenderManager::instance();
-	flux_render::RenderSceneManager* sceneMngr = rMngr->getSceneManager();
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	flux_render::RenderScene* currentScene = sceneMngr->getScene(sceneID);
+	if (sceneBackend == nullptr) {
+		// throwFluxError(false, "No existe SceneBackend para borrar la animación " + animationName);
+		return;
+	}
 
-	currentScene->deleteAnimation(entityName,animationName);
+	if (!sceneBackend->removeAnimation(sceneID, entityName, animationName)) {
+		// throwFluxError(false, "No se pudo borrar la animación " + animationName + " de la entidad " + entityName);
+		return;
+	}
+
+	_animations.erase(animationName);
 }
 
-void flux_ec::CAnimator::setAnimationEnabled(const std::string& animationName, bool enabled) {
-	_animations.erase(animationName);
+void flux_ec::CAnimator::setAnimationEnabled(const std::string& animationName, bool enabled) 
+{
+	if (_animations.find(animationName) == _animations.end()) {
+		return;
+	}
+
 	std::string entityName = getOwner()->getName();
 	std::string sceneID = getOwner()->getSceneID();
 
-	flux_render::RenderManager* rMngr = flux_render::RenderManager::instance();
-	flux_render::RenderSceneManager* sceneMngr = rMngr->getSceneManager();
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	flux_render::RenderScene* currentScene = sceneMngr->getScene(sceneID);
+	if (sceneBackend == nullptr) {
+		// throwFluxError(false, "No existe SceneBackend para activar/desactivar la animación " + animationName);
+		return;
+	}
 
-	currentScene->setAnimationEnabled(entityName, animationName, enabled);
+	if (!sceneBackend->setAnimationEnabled(sceneID, entityName, animationName, enabled)) {
+		// throwFluxError(false, "No se pudo cambiar el estado de la animación " + animationName)
+	}
 }
 
 void flux_ec::CAnimator::setAnimationLoop(const std::string& animationName, bool loop) {
-	_animations.erase(animationName);
+
+	if (_animations.find(animationName) == _animations.end()) {
+		return;
+	}
+
 	std::string entityName = getOwner()->getName();
 	std::string sceneID = getOwner()->getSceneID();
 
-	flux_render::RenderManager* rMngr = flux_render::RenderManager::instance();
-	flux_render::RenderSceneManager* sceneMngr = rMngr->getSceneManager();
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	flux_render::RenderScene* currentScene = sceneMngr->getScene(sceneID);
+	if (sceneBackend == nullptr) {
+		// throwFluxError(false, "No existe SceneBackend para cambiar el loop de la animación " + animationName);
+		return;
+	}
 
-	currentScene->setAnimationLoop(entityName, animationName, loop);
+	if (!sceneBackend->setAnimationLoop(sceneID, entityName, animationName, loop)) {
+		// throwFluxError(false, "No se pudo cambiar el loop de la animación " + animationName);
+	}
 }

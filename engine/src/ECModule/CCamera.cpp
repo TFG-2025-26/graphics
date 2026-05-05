@@ -21,18 +21,20 @@ bool flux_ec::CCamera::init(flux_script::ComponentArguments* args)
 	std::string entityName = getOwner()->getName();
 	std::string sceneID = getOwner()->getSceneID();
 
-	flux_render::RenderManager* rMngr = flux_render::RenderManager::instance();
-	flux_render::RenderSceneManager* sceneMngr = rMngr->getSceneManager();
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	flux_render::RenderScene* currentScene = sceneMngr->getScene(sceneID);
-	flux_render::RenderScene* activeScene = sceneMngr->getCurrentScene();
+	if (sceneBackend == nullptr) {
+		throwFluxError(false, "No existe SceneBackend para inicializar la camara de la entidad " +
+			entityName);
+		return false;
+	}
 
-	if (currentScene != activeScene) {
+	if (!sceneBackend->isCurrentScene(sceneID)) {
 		_pendingCreation = true;
 		return true;
 	}
 
-	// return createCamera();
+	return createCamera();
 }
 
 void flux_ec::CCamera::update(float dt)
@@ -64,12 +66,17 @@ bool flux_ec::CCamera::createCamera()
 	std::string entityName = getOwner()->getName();
 	std::string sceneID = getOwner()->getSceneID();
 
-	auto* rMngr = flux_render::RenderManager::instance();
-	auto* sceneMngr = rMngr->getSceneManager();
+	auto* sceneBackend = flux_render::RenderManager::instance()->getSceneBackend();
 
-	flux_render::RenderScene* scene = sceneMngr->getScene(sceneID);
-	if (!scene->createCamera(entityName, _nearDist, _farDist))
-		throwFluxError(false, "Fallo al crear la cámara de la entidad" + entityName);
+	if (sceneBackend == nullptr) {
+		throwFluxError(false, "No existe SceneBackend para Camera");
+		return false;
+	}
+
+	if (!sceneBackend->createCamera(sceneID, entityName, _nearDist, _farDist)) {
+		throwFluxError(false, "Fallo al crear la camara de la entidad " + entityName);
+		return false;
+	}
 
 	_pendingCreation = false;
 	return true;

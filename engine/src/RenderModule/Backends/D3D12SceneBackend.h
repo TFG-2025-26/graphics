@@ -1,21 +1,21 @@
 #pragma once
 
-#ifndef OGRE_SCENE_BACKEND_H_
-#define OGRE_SCENE_BACKEND_H_
+#ifndef D3D12_SCENE_BACKEND_H_
+#define D3D12_SCENE_BACKEND_H_
 
 #include "IRenderSceneBackend.h"
 
-class OgreBackend;
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace flux_render {
-    class RenderSceneManager;
-    class RenderScene;
-    class UIManager;
+    class D3D12Backend;
 
-    class OgreSceneBackend : public IRenderSceneBackend {
+    class D3D12SceneBackend : public IRenderSceneBackend {
     public:
-        OgreSceneBackend(OgreBackend* renderBackend, UIManager* uiManager);
-        ~OgreSceneBackend() override = default;
+        explicit D3D12SceneBackend(D3D12Backend* renderBackend);
+        ~D3D12SceneBackend() override = default;
 
         bool init() override;
         void shutdown() override;
@@ -87,15 +87,16 @@ namespace flux_render {
 
         bool isCurrentScene(const std::string& sceneID) const override;
 
-        RenderSceneManager* getSceneManager() const;
+        bool hasScene(const std::string& sceneID) const;
+        bool hasSceneObject(const std::string& sceneID, const std::string& entityID) const;
+        const std::string& getCurrentSceneID() const;
 
     private:
-        RenderScene* getScene(const std::string& sceneID) const;
-
-        OgreBackend* _renderBackend = nullptr;
-        UIManager* _uiManager = nullptr;
-        RenderSceneManager* _sceneManager = nullptr;
+        D3D12Backend* _renderBackend = nullptr;
+        std::unordered_map<std::string, std::unordered_set<std::string>> _scenes;
+        std::string _currentSceneID;
+        bool _initialized = false;
     };
 }
 
-#endif // OGRE_SCENE_BACKEND_H_
+#endif // D3D12_SCENE_BACKEND_H_

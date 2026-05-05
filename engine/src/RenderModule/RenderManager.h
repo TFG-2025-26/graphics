@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #ifndef RENDER_MANAGER_H_
 #define RENDER_MANAGER_H_
@@ -113,6 +113,9 @@ namespace flux_render {
 		FLUX_API void enablePhysicsDebugDraw(btDiscreteDynamicsWorld* world, bool enable);
 		FLUX_API UIManager* getUIManager() const;
 
+		FLUX_API void setBackendAPI(BackendAPI api);
+		FLUX_API BackendAPI getBackendAPI() const;
+
 		IRenderBackend* getBackend() const;
 		OgreBackend* getOgreBackend() const;
 		SDL_Window* getNativeWindow() const;
@@ -130,7 +133,7 @@ namespace flux_render {
 		SDL_Window* _nativeWindow = nullptr;
 		std::unique_ptr<IRenderBackend> _backend = nullptr;
 		std::unique_ptr<IRenderSceneBackend> _sceneBackend = nullptr;
-		BackendAPI _selectedAPI = BackendAPI::Ogre;
+		BackendAPI _selectedAPI = BackendAPI::D3D12;
 
 		bool _vsync = true;
 	protected:
