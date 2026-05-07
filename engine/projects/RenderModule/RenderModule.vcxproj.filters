@@ -75,6 +75,9 @@
     <ClInclude Include="..\..\src\RenderModule\Backends\IRenderSceneBackend.h">
       <Filter>Archivos de encabezado\Backends</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\RenderModule\Backends\D3D12Types.h">
+      <Filter>Archivos de encabezado\Backends</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Archivos de encabezado">

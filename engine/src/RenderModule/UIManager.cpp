@@ -98,29 +98,67 @@ bool flux_render::UIManager::registerComponent(flux_ec::CUI* comp) {
 }
 
 void flux_render::UIManager::setSceneActive(const std::string& sceneID) {
+	if (!isInitialized) {
+		return;
+	}
+
+	if (_overlayMngr == nullptr) {
+		return;
+	}
+
 	for (auto& [sid, overlays] : _sceneOverlays) {
 		for (auto& [comp, data] : overlays) {
-			if (data.overlay) data.overlay->hide();
+			if (data.overlay != nullptr) 
+				data.overlay->hide();
 		}
 	}
+
 	auto it = _sceneOverlays.find(sceneID);
-	if (it != _sceneOverlays.end()) {
-		for (auto& [comp, data] : it->second) {
-			if (data.overlay) data.overlay->show();
-		}
+
+	if (it == _sceneOverlays.end()) {
+		return;
+	}
+
+	for (auto& [comp, data] : it->second) {
+		if (data.overlay != nullptr) 
+			data.overlay->show();
 	}
 }
 
-void flux_render::UIManager::clearScene(const std::string& sceneID) {
-	auto it = _sceneOverlays.find(sceneID);
-	if (it != _sceneOverlays.end()) {
-		for (auto& [comp, data] : it->second) {
-			if (data.text) _overlayMngr->destroyOverlayElement(data.text);
-			if (data.panel) _overlayMngr->destroyOverlayElement(data.panel);
-			if (data.overlay) _overlayMngr->destroy(data.overlay);
-		}
-		_sceneOverlays.erase(it);
+void flux_render::UIManager::clearScene(const std::string& sceneID)
+{
+	if (!isInitialized) {
+		return;
 	}
+
+	if (_overlayMngr == nullptr) {
+		return;
+	}
+
+	auto it = _sceneOverlays.find(sceneID);
+
+	if (it == _sceneOverlays.end()) {
+		return;
+	}
+
+	for (auto& [comp, data] : it->second) {
+		if (data.text != nullptr) {
+			_overlayMngr->destroyOverlayElement(data.text);
+			data.text = nullptr;
+		}
+
+		if (data.panel != nullptr) {
+			_overlayMngr->destroyOverlayElement(data.panel);
+			data.panel = nullptr;
+		}
+
+		if (data.overlay != nullptr) {
+			_overlayMngr->destroy(data.overlay);
+			data.overlay = nullptr;
+		}
+	}
+
+	_sceneOverlays.erase(it);
 }
 
 bool flux_render::UIManager::fontExists(const std::string& fontName) const {
