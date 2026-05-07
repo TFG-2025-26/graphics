@@ -335,6 +335,15 @@ void flux_render::RenderScene::updateAnimations(const std::string& entityID,
 	//throwFluxError(, "No se encontro la animacion "+ animationName +"para ser actualizada");
 }
 
+void flux_render::RenderScene::updateAnimation(const std::string& entityID, const std::string& animationName, float dt)
+{
+	auto it = _entities.find(entityID);
+
+	if (it != _entities.end() && it->second != nullptr) {
+		it->second->updateAnimation(animationName, dt);
+	}
+}
+
 std::vector<Ogre::SceneNode*> flux_render::RenderScene::getChildrenNodes(Ogre::SceneNode* node)
 {
 	std::vector<Ogre::SceneNode*> result;

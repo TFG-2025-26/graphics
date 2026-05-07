@@ -9,21 +9,38 @@
 #include <iostream>
 
 struct DebugDrawer::Impl : public btIDebugDraw {
-    Ogre::SceneManager* _sceneManager;
-    Ogre::ManualObject* _lines;
-    int _debugMode;
+    Ogre::SceneManager* _sceneManager = nullptr;
+    Ogre::ManualObject* _lines = nullptr;
+    Ogre::SceneNode* _node = nullptr;
+    int _debugMode = DBG_DrawWireframe;
 
     Impl(Ogre::SceneManager* sceneManager)
-        : _sceneManager(sceneManager), _debugMode(DBG_DrawWireframe) {
+        : _sceneManager(sceneManager)
+    {
         _lines = sceneManager->createManualObject("PhysicsDebugDrawer");
         _lines->setDynamic(true);
-        _sceneManager->getRootSceneNode()->createChildSceneNode()->attachObject(_lines);
+
+        _node = _sceneManager->getRootSceneNode()->createChildSceneNode("PhysicsDebugDrawerNode");
+        _node->attachObject(_lines);
     }
 
     ~Impl() {
-        if (_lines) {
+        if (_node != nullptr && _lines != nullptr) {
+            _node->detachObject(_lines);
+        }
+
+        if (_lines != nullptr && _sceneManager != nullptr) {
             _sceneManager->destroyManualObject(_lines);
             _lines = nullptr;
+        }
+
+        if (_node != nullptr && _sceneManager != nullptr) {
+            if (_node->getParentSceneNode() != nullptr) {
+                _node->getParentSceneNode()->removeChild(_node);
+            }
+
+            _sceneManager->destroySceneNode(_node);
+            _node = nullptr;
         }
     }
 

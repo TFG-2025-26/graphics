@@ -23,7 +23,13 @@ void flux_render::D3D12SceneBackend::shutdown()
 bool flux_render::D3D12SceneBackend::createScene(const std::string& sceneID)
 {
     if (!_initialized || sceneID.empty()) return false;
-    return _scenes.emplace(sceneID, std::unordered_set<std::string>{}).second;
+
+    if (_scenes.find(sceneID) != _scenes.end()) {
+        return true;
+    }
+
+    _scenes.emplace(sceneID, std::unordered_set<std::string>{});
+    return true;
 }
 
 bool flux_render::D3D12SceneBackend::destroyScene(const std::string& sceneID)
@@ -55,12 +61,13 @@ bool flux_render::D3D12SceneBackend::createSceneObject(
     const std::string& sceneID,
     const std::string& entityID)
 {
-    if (!_initialized || entityID.empty()) return false;
+    if (!_initialized || sceneID.empty() || entityID.empty()) return false;
 
     auto it = _scenes.find(sceneID);
     if (it == _scenes.end()) return false;
 
-    return it->second.insert(entityID).second;
+    it->second.insert(entityID);
+    return true;
 }
 
 bool flux_render::D3D12SceneBackend::destroySceneObject(

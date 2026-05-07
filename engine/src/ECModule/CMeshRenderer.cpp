@@ -3,6 +3,7 @@
 #include "Entity.h"
 
 // ---- FLUX_RENDER ----
+#include "Backends/IRenderSceneBackend.h"
 #include "RenderManager.h"
 #include "RenderSceneManager.h"
 #include "RenderScene.h"
@@ -14,10 +15,8 @@
 
 flux_ec::CMeshRenderer::~CMeshRenderer()
 {
-	if (getOwner() != nullptr && _meshName != "") {
-		flux_render::RenderManager::instance()->getSceneManager()->
-			getCurrentScene()->deleteSceneObject(getOwner()->getName());
-	}
+	// El RenderObject lo destruye CTransform
+	// Más adelante podemos añadir detachMesh() si queremos permitir quitar solo la malla
 }
 
 bool flux_ec::CMeshRenderer::init(flux_script::ComponentArguments* args)
@@ -41,6 +40,8 @@ bool flux_ec::CMeshRenderer::init(flux_script::ComponentArguments* args)
 		throwFluxError(false, "Fallo al inicializar el componente MeshRenderer");
 		return false;
 	}
+
+	return true;
 }
 
 void flux_ec::CMeshRenderer::update(float dt)

@@ -22,15 +22,26 @@ bool flux_utils::SceneManager::init()
 
 bool flux_utils::SceneManager::shutdown()
 {
-    // Borramos todas las escenas y sus entidades
     auto it = _scenesMap.begin();
+
     while (it != _scenesMap.end()) {
         for (auto& e : it->second) {
             delete e.second;
         }
+
         it = _scenesMap.erase(it);
     }
+
     _scenesMap.clear();
+
+    for (auto& prefab : _prefabsMap) {
+        delete prefab.second;
+    }
+
+    _prefabsMap.clear();
+    borrar.clear();
+    _sceneToLoadPending.clear();
+    _activeScene.clear();
 
     return true;
 }

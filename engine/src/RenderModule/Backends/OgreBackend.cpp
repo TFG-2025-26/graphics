@@ -72,6 +72,11 @@ void OgreBackend::shutdown()
 		_renderWindow = nullptr;
 	}
 
+	if (_shaderGenerator != nullptr) {
+		Ogre::RTShader::ShaderGenerator::destroy();
+		_shaderGenerator = nullptr;
+	}
+
 	delete _root;
 	_root = nullptr;
 
@@ -311,5 +316,15 @@ bool OgreBackend::initialiseRTShaderSystem()
 		}
 	}
 
+	return true;
+}
+
+bool OgreBackend::removeSceneManagerFromRTShaderSystem(Ogre::SceneManager* sm)
+{
+	if (_shaderGenerator == nullptr || sm == nullptr) {
+		return false;
+	}
+
+	_shaderGenerator->removeSceneManager(sm);
 	return true;
 }

@@ -24,24 +24,36 @@ flux_render::RenderSceneManager::~RenderSceneManager()
 {
 	for (auto& e : _scenes) {
 		RenderScene* scene = e.second;
+
 		if (scene != nullptr) {
 			Ogre::SceneNode* rootNode = scene->getSceneNode();
-			if (rootNode) {
+
+			// Primero borramos RenderObjects.
+			delete scene;
+
+			// Luego borramos el nodo raíz de la escena.
+			if (rootNode != nullptr && _sceneManager != nullptr) {
 				Ogre::SceneNode* parent = rootNode->getParentSceneNode();
-				if (parent) parent->removeChild(rootNode);
+
+				if (parent != nullptr) {
+					parent->removeChild(rootNode);
+				}
+
 				_sceneManager->destroySceneNode(rootNode);
 			}
-			delete scene;
 		}
 	}
-	_scenes.clear();
 
-	_root->destroySceneManager(_sceneManager);
+	_scenes.clear();
+	_currentScene = nullptr;
+
+	if (_root != nullptr && _sceneManager != nullptr) {
+		_root->destroySceneManager(_sceneManager);
+	}
+
 	_sceneManager = nullptr;
 	_uiManager = nullptr;
 }
-
-
 
 flux_render::RenderScene* flux_render::RenderSceneManager::createScene(const std::string& sceneID)
 {
@@ -69,27 +81,43 @@ flux_render::RenderScene* flux_render::RenderSceneManager::createScene(const std
 void flux_render::RenderSceneManager::destroyScene(const std::string& sceneID)
 {
 	auto it = _scenes.find(sceneID);
-	if (it != _scenes.end()) {
-		if (_currentScene == it->second) _currentScene = nullptr;
-		RenderScene* s = it->second;
-		if (s) {
-			Ogre::SceneNode* rootNode = s->getSceneNode();
-			if (rootNode) {
-				auto parent = rootNode->getParentSceneNode();
-				if (parent) parent->removeChild(rootNode);
-				_sceneManager->destroySceneNode(rootNode);
-			}
-			delete s;
-		}
-		_scenes.erase(it);
-		_uiManager->clearScene(sceneID); //Limpiamos todo lo que tenga que ver con la UI en sceneID
+
+	if (it == _scenes.end()) {
+		return;
 	}
-	else
-	{
-	//	throwFluxError(, "No se encontro la escena "+ sceneID +"para ser eliminada");
+
+	RenderScene* scene = it->second;
+
+	if (_currentScene == scene) {
+		_currentScene = nullptr;
+	}
+
+	Ogre::SceneNode* rootNode = nullptr;
+
+	if (scene != nullptr) {
+		rootNode = scene->getSceneNode();
+
+		// Primero RenderObjects.
+		delete scene;
+	}
+
+	// Luego nodo raíz de la escena.
+	if (rootNode != nullptr && _sceneManager != nullptr) {
+		Ogre::SceneNode* parent = rootNode->getParentSceneNode();
+
+		if (parent != nullptr) {
+			parent->removeChild(rootNode);
+		}
+
+		_sceneManager->destroySceneNode(rootNode);
+	}
+
+	_scenes.erase(it);
+
+	if (_uiManager != nullptr) {
+		_uiManager->clearScene(sceneID);
 	}
 }
-
 
 bool flux_render::RenderSceneManager::setCurrentScene(const std::string& sceneID)
 {

@@ -22,14 +22,26 @@ flux_render::RenderObject::RenderObject(const std::string& id,
 
 flux_render::RenderObject::~RenderObject()
 {
-	if (_node && _entity) {
-		_node->detachObject(_entity);
-		_entity = nullptr;
-	}
-
 	_animations.clear();
 
-	if (_node && _mngr) {
+	if (_node != nullptr) {
+		while (_node->numAttachedObjects() > 0) {
+			Ogre::MovableObject* movable = _node->getAttachedObject(0);
+			_node->detachObject(movable);
+
+			if (_mngr != nullptr && movable != nullptr) {
+				_mngr->destroyMovableObject(movable);
+			}
+		}
+	}
+
+	_entity = nullptr;
+
+	if (_node != nullptr && _mngr != nullptr) {
+		if (_node->getParentSceneNode() != nullptr) {
+			_node->getParentSceneNode()->removeChild(_node);
+		}
+
 		_mngr->destroySceneNode(_node);
 		_node = nullptr;
 	}
@@ -115,19 +127,19 @@ bool flux_render::RenderObject::addAnimation(const std::string& animationName) {
 	return true;
 }
 
-bool flux_render::RenderObject::deleteAnimation(const std::string& animationName) {
-	try {
-		auto it = _animations.find(animationName);
+bool flux_render::RenderObject::deleteAnimation(const std::string& animationName)
+{
+	auto it = _animations.find(animationName);
 
-		if (it != _animations.cend()) {
-			delete it->second;
-			_animations.erase(animationName);
+	if (it != _animations.end()) {
+		if (it->second != nullptr) {
+			it->second->setEnabled(false);
 		}
-		return true;
+
+		_animations.erase(it);
 	}
-	catch (std::exception e) {
-		throwFluxError(false, "No se pudo eliminar la animacion: " + animationName);
-	}
+
+	return true;
 }
 
 bool flux_render::RenderObject::setAnimationEnabled(const std::string& animationName, bool enabled) {
@@ -165,7 +177,34 @@ void  flux_render::RenderObject::updateAnimations(float dt) {
 	}
 }
 
-void flux_render::RenderObject::setEntity(Ogre::Entity* entity) {
+void flux_render::RenderObject::updateAnimation(const std::string& animationName, float dt)
+{
+	auto it = _animations.find(animationName);
+
+	if (it != _animations.end() && it->second != nullptr) {
+		it->second->addTime(dt);
+	}
+}
+
+void flux_render::RenderObject::setEntity(Ogre::Entity* entity)
+{
+	if (_node == nullptr) {
+		return;
+	}
+
+	if (_entity != nullptr) {
+		_node->detachObject(_entity);
+
+		if (_mngr != nullptr) {
+			_mngr->destroyEntity(_entity);
+		}
+
+		_entity = nullptr;
+	}
+
 	_entity = entity;
-	_node->attachObject(_entity);
+
+	if (_entity != nullptr) {
+		_node->attachObject(_entity);
+	}
 }

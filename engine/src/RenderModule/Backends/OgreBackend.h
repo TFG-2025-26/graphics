@@ -56,6 +56,7 @@ public:
 	void locateResources();
 	void loadResources();
 	bool initialiseRTShaderSystem();
+	bool removeSceneManagerFromRTShaderSystem(Ogre::SceneManager* sm);
 
 	Ogre::Root* getRoot() const { return _root; }
 	Ogre::RenderWindow* getRenderWindow() const { return _renderWindow; }

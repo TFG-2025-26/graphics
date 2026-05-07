@@ -53,6 +53,12 @@ namespace flux_render {
         void updateAnimations(const std::string& entityID,
             float dt);
 
+        void updateAnimation(
+            const std::string& entityID,
+            const std::string& animationName,
+            float dt
+        );
+
         std::vector<Ogre::SceneNode*> getChildrenNodes(Ogre::SceneNode* node);
         std::vector<std::string> getChildrenNames(Ogre::SceneNode* node);
 

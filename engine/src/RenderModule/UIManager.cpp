@@ -87,9 +87,12 @@ bool flux_render::UIManager::registerComponent(flux_ec::CUI* comp) {
 		_elemIndex++;
 		if (_elemIndex >= 99)
 			_elemIndex = 0;
+
+		return true;
 	}
 	catch (...) {
 		throwFluxError(false, "Error a la hora de registrar el compenente Overlay " + name + " de Ogre");
+		return false;
 	}
 	
 }

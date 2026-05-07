@@ -121,5 +121,19 @@ std::string flux_ec::CUI::getSceneID() const
 
 void flux_ec::CUI::setText(std::string nt) {
 	_text = nt;
-	flux_render::RenderManager::instance()->getUIManager()->updateText(getOwner()->getSceneID(),this);
+
+	auto* renderMngr = flux_render::RenderManager::instance();
+
+	if (renderMngr == nullptr) {
+		return;
+	}
+
+	auto* uiManager = renderMngr->getUIManager();
+
+	if (uiManager == nullptr) {
+		// D3D12: guardamos el texto en el componente, pero no lo dibujamos
+		return;
+	}
+
+	uiManager->updateText(getOwner()->getSceneID(), this);
 }

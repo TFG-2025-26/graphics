@@ -27,17 +27,13 @@ flux_ec::CTransform::~CTransform()
 		const std::string entityName = _owner->getName();
 		const std::string sceneID = _owner->getSceneID();
 
-		const bool hasMeshRenderer = _owner->hasComponent(MESH);
+		auto* renderManager = flux_render::RenderManager::instance();
 
-		if (!hasMeshRenderer) {
-			auto* renderManager = flux_render::RenderManager::instance();
+		if (renderManager != nullptr) {
+			auto* sceneBackend = renderManager->getSceneBackend();
 
-			if (renderManager != nullptr) {
-				auto* sceneBackend = renderManager->getSceneBackend();
-
-				if (sceneBackend != nullptr) {
-					sceneBackend->destroySceneObject(sceneID, entityName);
-				}
+			if (sceneBackend != nullptr) {
+				sceneBackend->destroySceneObject(sceneID, entityName);
 			}
 		}
 	}
@@ -50,6 +46,8 @@ flux_ec::CTransform::~CTransform()
 
 	delete _scale;
 	_scale = nullptr;
+
+	_renderObject = nullptr;
 }
 
 bool flux_ec::CTransform::init(flux_script::ComponentArguments* args)

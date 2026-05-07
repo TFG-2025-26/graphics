@@ -237,6 +237,10 @@ bool flux_render::RenderManager::shutdown()
 		_debugDrawer = nullptr;
 	}
 
+	if (_uiManager != nullptr) {
+		_uiManager->shutdown();
+	}
+
 	if (_sceneBackend != nullptr) {
 		_sceneBackend->shutdown();
 		_sceneBackend.reset();

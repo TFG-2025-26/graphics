@@ -32,6 +32,12 @@ bool flux_render::OgreSceneBackend::init()
 
 void flux_render::OgreSceneBackend::shutdown()
 {
+    if (_renderBackend != nullptr && _sceneManager != nullptr) {
+        _renderBackend->removeSceneManagerFromRTShaderSystem(
+            _sceneManager->getOgreSceneManager()
+        );
+    }
+
     delete _sceneManager;
     _sceneManager = nullptr;
 }
@@ -180,7 +186,8 @@ bool flux_render::OgreSceneBackend::updateAnimation(
 {
     auto* scene = getScene(sceneID);
     if (scene == nullptr) return false;
-    scene->updateAnimations(entityID, dt);
+
+    scene->updateAnimation(entityID, animationName, dt);
     return true;
 }
 

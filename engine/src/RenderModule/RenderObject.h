@@ -44,6 +44,8 @@ namespace flux_render {
 		bool setAnimationLoop(const std::string& animationName, bool loop);
 		void updateAnimations(float dt);
 
+		void updateAnimation(const std::string& animationName, float dt);
+
 		Ogre::SceneNode* getSceneNode() const;
 		void setEntity(Ogre::Entity* entity);
 	protected:
