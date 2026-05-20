@@ -1,0 +1,11 @@
+FLUXMAT 1
+
+name Sinbad/Body
+baseColor 1 1 1 1
+ambient 0.75 0.75 0.75 1
+specular 0 0 0 1
+shininess 16
+metallic 0
+roughness 0.7
+texture sinbad_body.tga
+lighting on

@@ -95,6 +95,9 @@ namespace flux_render {
         OgreBackend* _renderBackend = nullptr;
         UIManager* _uiManager = nullptr;
         RenderSceneManager* _sceneManager = nullptr;
+
+    protected:
+        std::string resolveMeshName(const std::string& logicalMeshName) const override;
     };
 }
 

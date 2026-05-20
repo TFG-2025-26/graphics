@@ -1,0 +1,11 @@
+FLUXMAT 1
+
+name suelo
+baseColor 1 1 1 1
+ambient 0.35 0.35 0.35 1
+specular 0 0 0 1
+shininess 16
+metallic 0
+roughness 0.7
+texture checker.png
+lighting on

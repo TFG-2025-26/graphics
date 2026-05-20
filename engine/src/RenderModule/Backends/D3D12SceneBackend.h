@@ -109,6 +109,9 @@ namespace flux_render {
 		std::string _currentSceneID;
 		D3D12CameraData _camera;
 		bool _initialized = false;
+
+	protected:
+		std::string resolveMeshName(const std::string& logicalMeshName) const override;
 	};
 
 }

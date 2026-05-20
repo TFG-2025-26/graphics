@@ -1,0 +1,11 @@
+FLUXMAT 1
+
+name Sinbad/Teeth
+baseColor 1 1 1 1
+ambient 0.75 0.75 0.75 1
+specular 0.25 0.25 0.25 10.5
+shininess 10.5
+metallic 0
+roughness 0.7
+texture sinbad_body.tga
+lighting on

@@ -107,8 +107,14 @@ bool flux_render::OgreSceneBackend::attachMesh(
     const std::string& materialName)
 {
     auto* scene = getScene(sceneID);
-    if (scene == nullptr) return false;
-    return scene->createMesh(entityID, meshName, materialName);
+
+    if (scene == nullptr) {
+        return false;
+    }
+
+    const std::string ogreMeshName = resolveMeshName(meshName);
+
+    return scene->createMesh(entityID, ogreMeshName, materialName);
 }
 
 bool flux_render::OgreSceneBackend::createLight(
@@ -210,4 +216,18 @@ flux_render::RenderScene* flux_render::OgreSceneBackend::getScene(const std::str
 {
     if (_sceneManager == nullptr) return nullptr;
     return _sceneManager->getScene(sceneID);
+}
+
+std::string flux_render::OgreSceneBackend::resolveMeshName(const std::string& logicalMeshName) const
+{
+    if (logicalMeshName.empty()) {
+        return "";
+    }
+
+    if (logicalMeshName.size() >= 5 &&
+        logicalMeshName.substr(logicalMeshName.size() - 5) == ".mesh") {
+        return logicalMeshName;
+    }
+
+    return logicalMeshName + ".mesh";
 }

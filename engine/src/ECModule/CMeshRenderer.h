@@ -29,6 +29,9 @@ namespace flux_ec {
 	private:
 		std::string _meshName;
 		std::string _materialName;
+
+	private:
+		std::string stripKnownMeshExtension(const std::string& meshName);
 	};
 }
 

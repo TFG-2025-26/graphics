@@ -15,6 +15,7 @@ namespace flux_render {
 		std::string sceneID;
 		std::string entityID;
 		std::string meshName;
+		std::string materialName;
 
 		flux_utils::Vector3 position = flux_utils::Vector3(0, 0, 0);
 		flux_utils::Vector4 rotation = flux_utils::Vector4(0, 0, 0, 1);

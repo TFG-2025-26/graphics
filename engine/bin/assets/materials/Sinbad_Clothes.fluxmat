@@ -1,0 +1,11 @@
+FLUXMAT 1
+
+name Sinbad/Clothes
+baseColor 1 1 1 1
+ambient 0.75 0.75 0.75 1
+specular 0.05 0.05 0.05 12.5
+shininess 12.5
+metallic 0
+roughness 0.7
+texture sinbad_clothes.tga
+lighting on

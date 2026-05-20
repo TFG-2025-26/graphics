@@ -1,0 +1,11 @@
+FLUXMAT 1
+
+name Sinbad/Sheaths
+baseColor 1 1 1 1
+ambient 0.75 0.75 0.75 1
+specular 0.2 0.1 0.1 1
+shininess 50
+metallic 0
+roughness 0.7
+texture sinbad_sword.tga
+lighting on

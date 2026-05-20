@@ -22,6 +22,7 @@ flux_ec::CMeshRenderer::~CMeshRenderer()
 bool flux_ec::CMeshRenderer::init(flux_script::ComponentArguments* args)
 {
 	_meshName = args->getValueToString("Mesh");
+	_meshName = stripKnownMeshExtension(_meshName);
 	_materialName = args->getValueToString("Material");
 
 	if (_materialName.empty()) _materialName = "MissingTexture";
@@ -47,4 +48,27 @@ bool flux_ec::CMeshRenderer::init(flux_script::ComponentArguments* args)
 void flux_ec::CMeshRenderer::update(float dt)
 {
 
+}
+
+std::string flux_ec::CMeshRenderer::stripKnownMeshExtension(const std::string& meshName)
+{
+	std::string result = meshName;
+
+	const std::string extensions[] = {
+		".mesh",
+		".fluxmesh",
+		".obj",
+		".gltf",
+		".glb"
+	};
+
+	for (const auto& ext : extensions) {
+		if (result.size() >= ext.size() &&
+			result.compare(result.size() - ext.size(), ext.size(), ext) == 0) {
+			result = result.substr(0, result.size() - ext.size());
+			break;
+		}
+	}
+
+	return result;
 }

@@ -1,0 +1,11 @@
+FLUXMAT 1
+
+name Hoja
+baseColor 0.002763 1 0 1
+ambient 0.35 0.35 0.35 1
+specular 1 0 0 0
+shininess 0
+metallic 0
+roughness 0.7
+texture none
+lighting on

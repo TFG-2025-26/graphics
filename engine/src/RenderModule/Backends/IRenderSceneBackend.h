@@ -85,6 +85,9 @@ namespace flux_render {
             float dt) = 0;
 
         virtual bool isCurrentScene(const std::string& sceneID) const = 0;
+
+    protected:
+        virtual std::string resolveMeshName(const std::string& logicalMeshName) const = 0;
     };
 }
 

@@ -246,7 +246,8 @@ bool flux_render::D3D12SceneBackend::attachMesh(
         return false;
     }
 
-    renderableIt->second.meshName = meshName;
+    renderableIt->second.meshName = resolveMeshName(meshName);
+    renderableIt->second.materialName = materialName;
     renderableIt->second.hasMesh = true;
 
     size_t hash = std::hash<std::string>{}(entityID);
@@ -475,4 +476,18 @@ void flux_render::D3D12SceneBackend::syncCameraToBackend()
     }
 
     _renderBackend->setCamera(_camera);
+}
+
+std::string flux_render::D3D12SceneBackend::resolveMeshName(const std::string& logicalMeshName) const
+{
+    if (logicalMeshName.empty()) {
+        return "";
+    }
+
+    if (logicalMeshName.size() >= 9 &&
+        logicalMeshName.substr(logicalMeshName.size() - 9) == ".fluxmesh") {
+        return logicalMeshName;
+    }
+
+    return logicalMeshName + ".fluxmesh";
 }
