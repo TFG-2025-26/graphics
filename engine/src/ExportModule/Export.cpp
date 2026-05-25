@@ -32,7 +32,7 @@
 #include <FluxError.h>
 #include <SceneManager.h>
 
-#define FLUX_ENGINE_BENCHMARK 1
+#define FLUX_ENGINE_BENCHMARK 0
 
 #if FLUX_ENGINE_BENCHMARK
 static double g_sceneLoadMs = 0.0;

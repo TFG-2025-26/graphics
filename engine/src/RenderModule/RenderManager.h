@@ -133,6 +133,10 @@ namespace flux_render {
 		SDL_Window* _nativeWindow = nullptr;
 		std::unique_ptr<IRenderBackend> _backend = nullptr;
 		std::unique_ptr<IRenderSceneBackend> _sceneBackend = nullptr;
+
+		// Backend por defecto del motor.
+		// Cambiar a BackendAPI::Ogre para ejecutar la versión de referencia basada en Ogre.
+		// Cambiar a BackendAPI::D3D12 para ejecutar la reconstrucción experimental en DirectX 12.
 		BackendAPI _selectedAPI = BackendAPI::D3D12;
 
 		bool _vsync = true;
