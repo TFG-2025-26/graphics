@@ -86,6 +86,8 @@ bool flux_render::D3D12Backend::createFactoryAndDevice()
     HRESULT hr = CreateDXGIFactory2(factoryFlags, IID_PPV_ARGS(&_factory));
     if (FAILED(hr)) return false;
 
+    _allowTearing = checkTearingSupport();
+
     hr = D3D12CreateDevice(
         nullptr,
         D3D_FEATURE_LEVEL_11_0,
@@ -94,6 +96,26 @@ bool flux_render::D3D12Backend::createFactoryAndDevice()
     if (FAILED(hr)) return false;
 
     return true;
+}
+
+bool flux_render::D3D12Backend::checkTearingSupport()
+{
+    Microsoft::WRL::ComPtr<IDXGIFactory5> factory5;
+
+    HRESULT hr = _factory.As(&factory5);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    BOOL allowTearing = FALSE;
+
+    hr = factory5->CheckFeatureSupport(
+        DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+        &allowTearing,
+        sizeof(allowTearing)
+    );
+
+    return SUCCEEDED(hr) && allowTearing == TRUE;
 }
 
 bool flux_render::D3D12Backend::createCommandObjects()
@@ -138,6 +160,7 @@ bool flux_render::D3D12Backend::createSwapChain()
     swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapDesc.SampleDesc.Count = 1;
+    swapDesc.Flags = _allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
     Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
 
@@ -1040,7 +1063,12 @@ void flux_render::D3D12Backend::endFrame()
     ID3D12CommandList* lists[] = { _commandList.Get() };
     _commandQueue->ExecuteCommandLists(1, lists);
 
-    hr = _swapChain->Present(_vsync ? 1 : 0, 0);
+    const UINT syncInterval = _vsync ? 1 : 0;
+    const UINT presentFlags = (!_vsync && _allowTearing)
+        ? DXGI_PRESENT_ALLOW_TEARING
+        : 0;
+
+    hr = _swapChain->Present(syncInterval, presentFlags);
     if (FAILED(hr)) return;
 
     moveToNextFrame();
@@ -1099,7 +1127,7 @@ void flux_render::D3D12Backend::resize(uint32_t width, uint32_t height)
         _width,
         _height,
         DXGI_FORMAT_R8G8B8A8_UNORM,
-        0
+        _allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0
     );
     if (FAILED(hr)) return;
 

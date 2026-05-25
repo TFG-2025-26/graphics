@@ -18,6 +18,9 @@
     <ClInclude Include="..\..\src\ExportModule\Export.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\ExportModule\FluxBenchmarkMetrics.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ExportModule\Export.cpp">

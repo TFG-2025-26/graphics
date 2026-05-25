@@ -1,4 +1,5 @@
 #include "Export.h"
+#include "FluxBenchmarkMetrics.h"
 
 #include <iostream>
 #include <chrono>
@@ -30,6 +31,13 @@
 #include <Vector4.h>
 #include <FluxError.h>
 #include <SceneManager.h>
+
+#define FLUX_ENGINE_BENCHMARK 1
+
+#if FLUX_ENGINE_BENCHMARK
+static double g_sceneLoadMs = 0.0;
+static double g_memoryAfterSceneLoadMB = 0.0;
+#endif
 
 bool _isInitialized = false;
 bool _isRunning = false;
@@ -124,9 +132,21 @@ bool flux_export::Export::initEngine()
             throwFluxError(false, "Fallo al inicializar el gestor de escenas.");
         }
 
+#if FLUX_ENGINE_BENCHMARK
+        const auto sceneLoadStart = std::chrono::high_resolution_clock::now();
+#endif
+
         if (!loadScene()) {
             throwFluxError(false, "Fallo al cargar los preparar los datos del juego.");
         }
+
+#if FLUX_ENGINE_BENCHMARK
+        const auto sceneLoadEnd = std::chrono::high_resolution_clock::now();
+        g_sceneLoadMs = std::chrono::duration<double, std::milli>(sceneLoadEnd - sceneLoadStart).count();
+        g_memoryAfterSceneLoadMB = FluxBenchmarkMetrics::getProcessMemoryMB();
+        // Para medir rendimiento sin capar por VSync. Si se quiere medir experiencia de usuario, comentar esta línea.
+        rdrMngr->setSync(false);
+#endif
 
 #ifdef _DEBUG
         rdrMngr->enablePhysicsDebugDraw(physicsMng->getDynamicsWorld(), true);
@@ -157,6 +177,21 @@ FLUX_API bool flux_export::Export::callRunEngine()
 bool flux_export::Export::runEngine() {
 
     _isRunning = true;
+
+#if FLUX_ENGINE_BENCHMARK
+    const std::string backendName =
+        rdrMngr->getBackendAPI() == BackendAPI::Ogre ? "Ogre" : "DirectX 12";
+    const std::string csvPath =
+        rdrMngr->getBackendAPI() == BackendAPI::Ogre ? "metrics_engine_ogre.csv" : "metrics_engine_directx12.csv";
+
+    FluxBenchmarkMetrics benchmark(
+        backendName,
+        g_sceneLoadMs,
+        g_memoryAfterSceneLoadMB,
+        csvPath
+    );
+#endif
+
     auto startTime = std::chrono::high_resolution_clock::now();
     while (_isRunning) {
         // Calcular frameTime (en segundos)
@@ -165,6 +200,9 @@ bool flux_export::Export::runEngine() {
         float frameTime = elapsedTime.count();
         startTime = currentTime;
 
+#if FLUX_ENGINE_BENCHMARK
+        benchmark.beginFrame();
+#endif
 
         // Actualizar todos los managers (esto procesa eventos, incluidos los del giroscopio)
         for (auto& m : managers) {
@@ -180,6 +218,11 @@ bool flux_export::Export::runEngine() {
 
         flux_utils::SceneManager::instance()->processPendingSceneChange();
 
+#if FLUX_ENGINE_BENCHMARK
+        if (benchmark.endFrame()) {
+            _isRunning = false;
+        }
+#endif
     }
 
     return true;

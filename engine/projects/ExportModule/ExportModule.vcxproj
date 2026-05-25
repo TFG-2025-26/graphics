@@ -90,6 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\ExportModule\Export.h" />
+    <ClInclude Include="..\..\src\ExportModule\FluxBenchmarkMetrics.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ExportModule\Export.cpp" />

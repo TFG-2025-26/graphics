@@ -64,6 +64,7 @@ namespace flux_render {
 
         bool cacheWindowHandle();
         bool createFactoryAndDevice();
+        bool checkTearingSupport();
         bool createCommandObjects();
         bool createSwapChain();
         bool createRTVHeap();
@@ -121,6 +122,7 @@ namespace flux_render {
         D3D12_RECT _scissorRect = {};
 
         UINT _frameIndex = 0;
+        bool _allowTearing = false;
 
         float _clearColor[4] = { 0.08f, 0.10f, 0.16f, 1.0f };
 
