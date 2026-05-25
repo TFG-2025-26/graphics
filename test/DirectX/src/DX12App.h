@@ -26,6 +26,7 @@ private:
 	// DXGI
 	Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain;
 	Microsoft::WRL::ComPtr<ID3D12Device> m_device;
+	bool m_allowTearing = false;
 
 	// Cola de comandos
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
@@ -42,7 +43,7 @@ private:
 	UINT64 m_fenceValue = 0;
 	HANDLE m_fenceEvent = nullptr;
 
-	// Tamaño
+	// Tamaï¿½o
 	UINT m_width = 800;
 	UINT m_height = 600;
 

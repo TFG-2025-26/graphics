@@ -1,5 +1,7 @@
+#include <chrono>
 #include <Windows.h>
 
+#include "BenchmarkMetrics.h"
 #include "VulkanApp.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -50,7 +52,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine,
 	ShowWindow(hwnd, nCmdShow);
 
 	VulkanApp app;
-	app.init(hwnd, width, height);
+
+	RECT clientRect{};
+	GetClientRect(hwnd, &clientRect);
+	int clientWidth = clientRect.right - clientRect.left;
+	int clientHeight = clientRect.bottom - clientRect.top;
+
+	auto initStart = std::chrono::high_resolution_clock::now();
+	app.init(hwnd, clientWidth, clientHeight);
+	auto initEnd = std::chrono::high_resolution_clock::now();
+
+	double initMs = std::chrono::duration<double, std::milli>(initEnd - initStart).count();
+
+	BenchmarkMetrics metrics(
+		"Vulkan",
+		initMs,
+		clientWidth,
+		clientHeight,
+		2,      // draw calls: triángulo + ejes
+		9,      // vértices: 3 triángulo + 6 ejes
+		"metrics_vulkan.csv"
+	);
 
 	// Bucle de mensajes
 	MSG msg = {};
@@ -60,7 +82,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, LPSTR lpCmdLine,
 			DispatchMessage(&msg);
 		}
 		else {
+			metrics.beginFrame();
 			app.render();
+
+			if (metrics.endFrame()) {
+				PostQuitMessage(0);
+			}
 		}
 	}
 

@@ -1,5 +1,7 @@
+#include "BenchmarkMetrics.h"
 #include "IG1App.h"
 
+#include <chrono>
 #include <iostream>
 
 using namespace std;
@@ -25,21 +27,38 @@ IG1App::close()
 }
 
 void
-IG1App::run() // enters the main event processing loop
+IG1App::run()
 {
-	if (mWindow == 0) // if not intilialized
+	auto initStart = std::chrono::high_resolution_clock::now();
+
+	if (mWindow == 0)
 		init();
 
-	// IG1App main loop
-	while (!glfwWindowShouldClose(mWindow)) {
-		// Redisplay the window if needed
-		if (mNeedsRedisplay) {
-			display();
-			mNeedsRedisplay = false;
-		}
+	auto initEnd = std::chrono::high_resolution_clock::now();
+	double initMs = std::chrono::duration<double, std::milli>(initEnd - initStart).count();
 
-		// Stop and wait for new events
-		glfwWaitEvents();
+	// Desactivar VSync para que la comparación no quede capada a 60 FPS.
+	glfwSwapInterval(0);
+
+	BenchmarkMetrics metrics(
+		"OpenGL",
+		initMs,
+		mWinW,
+		mWinH,
+		2,      // draw calls aproximadas: triángulo + ejes
+		9,      // vértices aproximados
+		"metrics_opengl.csv"
+	);
+
+	while (!glfwWindowShouldClose(mWindow)) {
+		glfwPollEvents();
+
+		metrics.beginFrame();
+		display();
+
+		if (metrics.endFrame()) {
+			glfwSetWindowShouldClose(mWindow, true);
+		}
 	}
 
 	destroy();

@@ -26,5 +26,8 @@
     <ClInclude Include="src\DX12App.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="src\BenchmarkMetrics.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

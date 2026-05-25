@@ -10,9 +10,9 @@ struct Vertex {
 	DirectX::XMFLOAT4 color;
 };
 
-// Triángulo y ejes
+// Triï¿½ngulo y ejes
 static const Vertex vertices[] = {
-	// Triángulo (cian)
+	// Triï¿½ngulo (cian)
 	{{ 0.0f,  300.0f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
 	{{ 260.0f, -150.0f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
 	{{ -260.0f, -150.0f, 0.0f }, { 0.0f, 1.0f, 1.0f, 1.0f }},
@@ -32,6 +32,21 @@ void DX12App::init(HWND hwnd, int width, int height)
 	// Crear el dispositivo
 	Microsoft::WRL::ComPtr<IDXGIFactory4> factory;
 	CreateDXGIFactory1(IID_PPV_ARGS(&factory));
+
+	// Comprobar si DXGI permite presentar sin sincronizaciÃ³n vertical real
+	// en modo ventana. Sin este flag, Present(0, 0) puede seguir limitado
+	// por DWM/la tasa de refresco del monitor en swapchains flip-model.
+	BOOL allowTearing = FALSE;
+	Microsoft::WRL::ComPtr<IDXGIFactory5> factory5;
+	if (SUCCEEDED(factory.As(&factory5))) {
+		factory5->CheckFeatureSupport(
+			DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+			&allowTearing,
+			sizeof(allowTearing));
+	}
+	m_allowTearing = allowTearing == TRUE;
+
+	factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 
 	Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
 	for (UINT i = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(i, &adapter); ++i) {
@@ -57,6 +72,7 @@ void DX12App::init(HWND hwnd, int width, int height)
 	scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	scDesc.SampleDesc.Count = 1;
+	scDesc.Flags = m_allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain1;
 	factory->CreateSwapChainForHwnd(
@@ -172,8 +188,8 @@ void DX12App::init(HWND hwnd, int width, int height)
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc;
 	rootSigDesc.Init(
-		1,                // 1 parámetro raíz (el cbuffer)
-		&rootParam,       // puntero al parámetro
+		1,                // 1 parï¿½metro raï¿½z (el cbuffer)
+		&rootParam,       // puntero al parï¿½metro
 		0, nullptr,       // sin static samplers
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -269,7 +285,7 @@ void DX12App::render()
 	m_commandList->RSSetScissorRects(1, &scissorRect);
 
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_commandList->DrawInstanced(3, 1, 0, 0); // triángulo
+	m_commandList->DrawInstanced(3, 1, 0, 0); // triï¿½ngulo
 
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 	m_commandList->DrawInstanced(6, 1, 3, 0); // ejes
@@ -286,7 +302,8 @@ void DX12App::render()
 	ID3D12CommandList* cmdLists[] = { m_commandList.Get() };
 	m_commandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
 
-	m_swapChain->Present(1, 0);
+	const UINT presentFlags = m_allowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0;
+	m_swapChain->Present(0, presentFlags);
 
 	waitForPreviousFrame();
 }

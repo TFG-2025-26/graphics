@@ -210,12 +210,22 @@ void VulkanApp::init(HWND hwnd, int width, int height)
 
     // FIFO siempre está soportado; si hay MAILBOX lo usamos (mejor latencia)
     VkPresentModeKHR chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+
     for (auto m : presentModes) {
-        if (m == VK_PRESENT_MODE_MAILBOX_KHR) { chosenPresentMode = m; break; }
+        if (m == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+            chosenPresentMode = m;
+            break;
+        }
     }
 
-    // --- Extent (ya lo tienes calculado arriba) ---
-    // m_swapChainExtent = ...
+    if (chosenPresentMode == VK_PRESENT_MODE_FIFO_KHR) {
+        for (auto m : presentModes) {
+            if (m == VK_PRESENT_MODE_MAILBOX_KHR) {
+                chosenPresentMode = m;
+                break;
+            }
+        }
+    }
 
     // --- Image count ---
     uint32_t imageCount = caps.minImageCount + 1;
